@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17264a"/><stop offset="1" stop-color="#080e20"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d98b"/><stop offset=".5" stop-color="#d4a13a"/><stop offset="1" stop-color="#a87820"/></linearGradient>
+ <linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#efe5cc"/></linearGradient>
+</defs>
+<rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+<rect x="26" y="26" width="972" height="972" rx="206" fill="none" stroke="url(#gold)" stroke-width="8"/>
+<rect x="48" y="48" width="928" height="928" rx="186" fill="none" stroke="url(#gold)" stroke-width="2.5" opacity=".7"/>
+<g transform="rotate(0 512 512)" fill="none" stroke="url(#gold)" stroke-linecap="square">
+ <path d="M84 200 L200 84" stroke-width="4"/><path d="M84 236 L236 84" stroke-width="3" opacity=".8"/><path d="M84 272 L272 84" stroke-width="2" opacity=".6"/>
+ <path d="M84 120 V84 H120" stroke-width="5"/></g><g transform="rotate(90 512 512)" fill="none" stroke="url(#gold)" stroke-linecap="square">
+ <path d="M84 200 L200 84" stroke-width="4"/><path d="M84 236 L236 84" stroke-width="3" opacity=".8"/><path d="M84 272 L272 84" stroke-width="2" opacity=".6"/>
+ <path d="M84 120 V84 H120" stroke-width="5"/></g><g transform="rotate(180 512 512)" fill="none" stroke="url(#gold)" stroke-linecap="square">
+ <path d="M84 200 L200 84" stroke-width="4"/><path d="M84 236 L236 84" stroke-width="3" opacity=".8"/><path d="M84 272 L272 84" stroke-width="2" opacity=".6"/>
+ <path d="M84 120 V84 H120" stroke-width="5"/></g><g transform="rotate(270 512 512)" fill="none" stroke="url(#gold)" stroke-linecap="square">
+ <path d="M84 200 L200 84" stroke-width="4"/><path d="M84 236 L236 84" stroke-width="3" opacity=".8"/><path d="M84 272 L272 84" stroke-width="2" opacity=".6"/>
+ <path d="M84 120 V84 H120" stroke-width="5"/></g>
+<circle cx="512" cy="512" r="372" fill="none" stroke="url(#gold)" stroke-width="3"/>
+<circle cx="512" cy="512" r="388" fill="none" stroke="url(#gold)" stroke-width="1.6" stroke-dasharray="2 9" opacity=".8"/>
+<g transform="translate(512 512) rotate(0.000) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="url(#gold)" stroke-width="7"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">7</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(27.692) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">8</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(55.385) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">9</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(83.077) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="30" fill="#1b2140">10</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(110.769) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">J</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(138.462) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">Q</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(166.154) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">K</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(193.846) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">A</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(221.538) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">2</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(249.231) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">3</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(276.923) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">4</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(304.615) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">5</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g><g transform="translate(512 512) rotate(332.308) translate(0 -262)">
+ <rect x="-56" y="-80" width="112" height="160" rx="13" fill="url(#card)" stroke="#cdbd91" stroke-width="2.5"/>
+ <text x="0" y="-38" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="34" fill="#1b2140">6</text>
+ <g transform="translate(0 -17) scale(.2)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+ <g transform="translate(0 26) scale(.72)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="#b5172b"/></g>
+</g>
+<circle cx="512" cy="512" r="178" fill="#0c1530" stroke="url(#gold)" stroke-width="3"/>
+<g transform="translate(512 474) scale(1.55)"><path d="M0,40 C-64,-8 -50,-54 -23,-54 C-8,-54 0,-43 0,-32 C0,-43 8,-54 23,-54 C50,-54 64,-8 0,40 Z" fill="url(#gold)"/></g>
+<g transform="translate(512 484) scale(1.05) translate(-20 -34)"><path d="M0,0 H40 V11 L17,58 H3 L26,11 H0 Z" fill="#0c1530"/></g>
+<text x="512" y="610" text-anchor="middle" font-family="DejaVu Serif, Georgia, serif" font-weight="700" font-size="35" letter-spacing="4" fill="url(#gold)">BADAM SAT</text>
+</svg>
