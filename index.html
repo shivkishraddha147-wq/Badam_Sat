@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TashGhar</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f8f1e1">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TashGhar">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+/* load the connection library, trying a second host if the first is blocked */
+window.mqttReady = (function(){
+  const urls = ["https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js","https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js","https://unpkg.com/mqtt/dist/mqtt.min.js"];
+  return new Promise(res=>{
+    (function next(i){
+      if (window.mqtt || i >= urls.length) return res(!!window.mqtt);
+      const el = document.createElement("script");
+      el.src = urls[i]; el.onload = ()=> window.mqtt ? res(true) : next(i+1); el.onerror = ()=> next(i+1);
+      document.head.appendChild(el);
+    })(0);
+  });
+})();
+</script>
+<style>
+/* Layout idea: warm cream page, one green felt board in the middle, maroon and gold accents taken from the logo. */
+:root{
+  --cw:72px;
+  --bg:#eee3cb;
+  --bg2:#f8f1e1;
+  --panel:#fffaf0;
+  --ink:#2b2218;
+  --mute:#7a6c58;
+  --line:rgba(70,45,20,.2);
+  --maroon:#7b1022;
+  --gold:#d4a13a;
+  --gold-soft:#f0d896;
+  --felt:#1f5f49;
+  --paper:#fffdf7;
+  --red:#c2332d;
+  --display:"Fraunces",Georgia,serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;-webkit-text-size-adjust:100%;overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(180deg,var(--bg2),var(--bg)) fixed}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--maroon);outline-offset:2px}
+#app{max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px 96px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;margin-right:auto;color:var(--maroon)}
+.chip{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;background:var(--panel)}
+.chip b{letter-spacing:.1em}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;background:var(--maroon);color:#fff5e1}
+.btn.gold{background:var(--gold);color:#2b1c00}
+.btn.ghost{background:transparent;border:1px solid rgba(70,45,20,.35);color:var(--ink);font-weight:500}
+.btn.small{padding:6px 11px;font-size:13px}
+.btn.rec{background:#c2332d;color:#fff}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(70,45,20,.08)}
+label{font-size:13px;color:var(--mute)}
+input,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid rgba(70,45,20,.3);background:#fff;color:var(--ink);font:inherit;font-size:16px}
+input.code{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-weight:700}
+.row{display:flex;gap:10px;align-items:flex-end}
+.row>*{flex:1}
+.hero{display:flex;flex-direction:column;gap:10px}
+.hero h1{font-size:34px;line-height:1.05;color:var(--maroon)}
+.hero p{margin:0;color:var(--mute);line-height:1.45}
+.logo{width:72px;height:72px;border-radius:16px;display:block;box-shadow:0 3px 8px rgba(70,45,20,.3)}
+.note{font-size:13px;color:var(--mute);line-height:1.4}
+.warn{background:#fff3d6;border:1px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:14px}
+.status{background:#fde7e3;border:1px solid #e08b82;border-radius:10px;padding:10px 12px;font-size:14px;text-align:center}
+.seats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seat{border:1px dashed rgba(70,45,20,.35);border-radius:12px;padding:12px;min-height:56px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.seat.on{border-style:solid;background:var(--panel)}
+.seat small{color:var(--mute)}
+.bigcode{font-family:var(--display);font-size:42px;font-weight:800;letter-spacing:.18em;text-align:center;color:var(--maroon)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:54px;padding:12px 10px;border-radius:10px;border:1px solid rgba(70,45,20,.3);background:#fff;font-weight:700}
+.seg button.on{background:var(--maroon);color:#fff5e1;border-color:var(--maroon)}
+
+/* opponents */
+.opps{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.opp{border:1px solid var(--line);border-radius:12px;padding:8px 9px;background:var(--panel);min-width:0;display:flex;flex-direction:column;gap:2px}
+.opp.turn{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,161,58,.4)}
+.opp .n{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opp .c{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.fan{display:flex;height:16px;margin-top:3px;max-width:100%;overflow:hidden}
+.fan i{display:block;flex:none;width:9px;height:16px;border-radius:2px;background:var(--maroon);border:1px solid #e8c97a;margin-right:-5px}
+
+.banner{border-radius:12px;padding:10px 14px;text-align:center;font-weight:700;background:var(--panel);border:1px solid var(--line)}
+.banner.me{background:var(--gold-soft);border-color:var(--gold)}
+
+/* board */
+.board{display:flex;flex-direction:column;gap:6px;background:var(--felt);border-radius:14px;padding:10px 8px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.12)}
+.lane{display:grid;grid-template-columns:20px repeat(13,1fr);gap:3px;align-items:stretch}
+.lane .s{display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff}
+.lane .s.red{color:#ffaaa4}
+.cell{aspect-ratio:.7;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1px dashed rgba(255,255,255,.28);color:rgba(255,255,255,.5);min-width:0}
+.cell.seven{border-color:var(--gold-soft);color:var(--gold-soft)}
+.cell.on{background:var(--paper);color:var(--ink);border:1px solid #fff;flex-direction:column;line-height:1}
+.cell.on.red{color:var(--red)}
+.cell.on small{font-size:10px;font-weight:400}
+.cell.new{box-shadow:0 0 0 2px var(--gold)}
+
+/* you */
+.mescore{display:flex;gap:8px;flex-wrap:wrap}
+.mescore span{flex:1;min-width:70px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 6px;font-size:13px;color:var(--mute)}
+.mescore b{display:block;font-size:22px;font-family:var(--display);color:var(--maroon);font-variant-numeric:tabular-nums}
+.hand-h{display:flex;justify-content:space-between;align-items:baseline}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,var(--cw));gap:10px 6px;justify-content:center;padding-top:12px}
+.pc{position:relative;width:var(--cw);height:calc(var(--cw)*1.42);border-radius:calc(var(--cw)*.12);border:1px solid #d6c9ad;background:var(--paper);color:var(--ink);font-family:var(--display);font-weight:800;padding:0;transition:transform .12s ease;box-shadow:0 2px 5px rgba(70,45,20,.25)}
+.pc .tl,.pc .br{position:absolute;font-size:calc(var(--cw)*.27);line-height:.95;text-align:center}
+.pc .tl{top:calc(var(--cw)*.06);left:calc(var(--cw)*.08)}
+.pc .br{bottom:calc(var(--cw)*.06);right:calc(var(--cw)*.08);transform:rotate(180deg)}
+.pc .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.55);line-height:1}
+.pc.red{color:var(--red)}
+.pc.ok{border:3px solid var(--gold);box-shadow:0 0 0 3px rgba(212,161,58,.35),0 2px 5px rgba(70,45,20,.25)}
+.pc.dim{opacity:.4}
+.pc.sel{transform:translateY(-10px) scale(1.04);box-shadow:0 10px 16px rgba(70,45,20,.4);border-color:var(--maroon);outline:3px solid var(--maroon);z-index:2}
+.actions{display:flex;gap:10px}
+.actions .btn{flex:1;padding:14px}
+
+/* log */
+details.log{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+details.log summary{cursor:pointer;padding:10px 0;font-size:14px;color:var(--mute);list-style:none;display:flex;justify-content:space-between}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::after{content:"Show";font-weight:700;color:var(--maroon)}
+details.log[open] summary::after{content:"Hide"}
+.logl{display:flex;flex-direction:column;gap:4px;padding:0 0 10px;font-size:13px;color:var(--mute)}
+.logl div:first-child{color:var(--ink);font-weight:500}
+
+/* sheets */
+.veil{position:fixed;inset:0;background:rgba(43,34,24,.55);display:flex;align-items:flex-end;justify-content:center;z-index:5}
+.sheet{width:100%;max-width:560px;max-height:92%;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.sw input{width:26px;height:26px;flex:none;accent-color:var(--maroon)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--bg2)}
+th{color:var(--mute);font-weight:500;font-size:12px}
+td.win{color:var(--maroon);font-weight:800}
+td.tot{font-weight:800;font-size:16px}
+tr.lead td{background:rgba(212,161,58,.22)}
+.champ{text-align:center;padding:14px;border-radius:14px;background:var(--gold-soft);border:1px solid var(--gold)}
+.champ h2{font-size:28px;color:var(--maroon)}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff5e1;padding:10px 16px;border-radius:10px;font-weight:500;z-index:20;max-width:90%;text-align:center}
+
+/* chat */
+.fab{position:fixed;right:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:6;border:0;border-radius:999px;padding:13px 20px;font-weight:700;background:var(--maroon);color:#fff5e1;box-shadow:0 6px 18px rgba(70,45,20,.4)}
+.fab .badge{display:inline-block;min-width:20px;padding:1px 6px;margin-left:8px;border-radius:999px;background:var(--gold);color:#2b1c00;font-size:12px;text-align:center}
+.chat{height:75%}
+.msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.msg{max-width:86%;padding:8px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);align-self:flex-start;display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}
+.msg.mine{align-self:flex-end;background:var(--gold-soft);border-color:var(--gold)}
+.msg .who{font-size:12px;color:var(--mute)}
+.msg .btn{align-self:flex-start}
+.composer{display:flex;gap:8px;align-items:center}
+.composer input{flex:1}
+.recbar{font-size:14px;color:var(--red);text-align:center}
+
+/* dock: the hand is pinned to the bottom and auto-sized so every card stays on screen */
+#app.ingame{padding-bottom:0}
+.dock{position:sticky;bottom:0;z-index:3;margin:0 -16px;padding:8px 16px max(10px,env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--line);box-shadow:0 -6px 14px rgba(70,45,20,.12);display:flex;flex-direction:column;gap:8px}
+.dock .hand{padding-top:12px;gap:10px 6px}
+.mescore.compact{gap:6px;flex-wrap:nowrap}
+.mescore.compact span{min-width:0;padding:3px 4px;font-size:11px}
+.mescore.compact b{font-size:16px;display:inline;margin-right:4px}
+.dock .actions .btn{padding:11px}
+.chatbtn{position:relative}
+.chatbtn .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--gold);color:#2b1c00;font-size:11px;text-align:center}
+/* tabs and Court Piece */
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.teambox{display:flex;flex-direction:column;gap:8px}
+.teambox h3{font-size:16px;color:var(--maroon)}
+.tabs{display:flex;gap:6px;background:rgba(70,45,20,.08);padding:4px;border-radius:12px}
+.tabs button{flex:1;border:0;border-radius:9px;padding:10px;font-weight:700;background:transparent;color:var(--mute)}
+.tabs button.on{background:var(--maroon);color:#fff5e1}
+.cscore{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+.cscore .team{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.cscore .team.me{border-color:var(--gold);background:var(--gold-soft)}
+.cscore small{color:var(--mute);font-size:11px}
+.cscore b{font-family:var(--display);font-size:26px;color:var(--maroon);line-height:1}
+.cscore .nm{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cscore .vs{display:flex;align-items:center;text-align:center;font-size:11px;color:var(--mute)}
+.chipsrow{display:flex;gap:6px;flex-wrap:wrap}
+.chipsrow .chip{font-size:12px;padding:4px 9px}
+.ttable{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;gap:6px;background:var(--felt);border-radius:14px;padding:10px 8px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);color:#fff}
+.tslot{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;padding:4px;border-radius:10px;border:2px solid transparent}
+.tslot.turn{border-color:var(--gold-soft)}
+.tslot.win{border-color:#fff;background:rgba(255,255,255,.15)}
+.tslot .nm{font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tslot .cnt{font-size:10px;opacity:.7}
+.tempty{width:52px;height:74px;border:1px dashed rgba(255,255,255,.35);border-radius:6px}
+.pc.mini{--cw:52px;cursor:default}
+.tcenter{grid-area:2 / 2;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;opacity:.95}
+.tcenter b{font-size:30px;line-height:1.1}
+.suitpick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.suitpick button{border:2px solid var(--gold);background:var(--paper);border-radius:12px;padding:8px 0;font-size:34px;line-height:1;color:var(--ink)}
+.suitpick button.red{color:var(--red)}
+
+/* more games */
+.gtiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.gtile{border:1.5px solid var(--line);background:var(--panel);border-radius:12px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
+.gtile b{font-size:15px}.gtile small{color:var(--mute);font-size:11px}
+.gtile.on{border-color:var(--maroon);background:var(--gold-soft);box-shadow:0 0 0 2px rgba(123,16,34,.15)}
+.gname{font-family:var(--display);font-size:22px;color:var(--maroon)}
+.rulebody{padding:6px 2px;font-size:13.5px;line-height:1.5}
+.rulebody h4{margin:10px 0 3px;color:var(--maroon);font-size:13.5px}
+.rulebody p,.rulebody ul,.rulebody ol{margin:0 0 6px}.rulebody ul,.rulebody ol{padding-left:18px}.rulebody li{margin-bottom:3px}
+.potbox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.potbox div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}
+.potbox small{display:block;color:var(--mute);font-size:11px}.potbox b{font-family:var(--display);font-size:22px;color:var(--maroon)}
+.rpiles{display:flex;gap:14px;justify-content:center;align-items:flex-end;background:var(--felt);border-radius:14px;padding:12px 8px;color:#fff}
+.rpiles>div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px}
+.rpiles small{opacity:.85}
+.pc.back{display:inline-block;width:52px;height:74px;border-radius:7px;background:repeating-linear-gradient(45deg,#7b1022 0 6px,#5f0c1a 6px 12px);border:2px solid #f3e6c3}
+.pc.joker{background:#fffaf0;color:#7b1022;font-weight:700}
+.pc.wildmark{box-shadow:0 0 0 2px var(--gold)}
+.hand.fixed{justify-content:center;gap:10px}
+.hand.fixed .pc,.hand.fixed .back{--cw:72px;width:72px;height:102px}
+.actions.wrap{flex-wrap:wrap}.actions.wrap .btn{flex:1 1 30%}
+.fan2{display:flex;gap:2px;justify-content:center;margin-top:3px}
+.cscore3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cscore3 .team{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;align-items:center}
+.cscore3 .team.me{border-color:var(--gold);background:var(--gold-soft)}
+.cscore3 small{color:var(--mute);font-size:11px}.cscore3 b{font-family:var(--display);font-size:24px;color:var(--maroon)}
+.cscore3 .nm{font-size:11px;color:var(--mute)}
+.ttable.tri{grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto}
+.ttable.tri .tslot{grid-row:1}.ttable.tri .tcenter{grid-area:2 / 1 / 3 / 4;flex-direction:row;gap:8px}
+.floatbtn{position:fixed;top:10px;left:0;right:0;display:flex;justify-content:center;z-index:5;padding:0 16px}
+.floatbtn .btn{width:auto;padding:12px 22px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.pc.uno{border-radius:9px;color:#fff;font-weight:800;border:3px solid #fff;position:relative;overflow:hidden;width:var(--cw,56px);height:calc(var(--cw,56px)*1.42);padding:0}
+.pc.uno.u0{background:#c2332d}.pc.uno.u1{background:#e0a916;color:#2b2218}.pc.uno.u2{background:#2d8a4e}.pc.uno.u3{background:#2a5db0}
+.pc.uno.u4{background:conic-gradient(#c2332d 0 25%,#e0a916 0 50%,#2d8a4e 0 75%,#2a5db0 0)}
+.pc.uno .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw,56px)*.5);text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.pc.uno .tl{position:absolute;top:3px;left:5px;font-size:calc(var(--cw,56px)*.22)}
+.pc.uno .br{position:absolute;bottom:3px;right:5px;font-size:calc(var(--cw,56px)*.22);transform:rotate(180deg)}
+.pc.uno.mini{--cw:52px}
+.pc.uno.dim{opacity:.4}.pc.uno.sel{transform:translateY(-10px)}
+.colorchip{padding:6px 12px;border-radius:999px;color:#fff;font-weight:700;font-size:13px}
+.colorchip.u0,.suitpick .uc.u0{background:#c2332d}.colorchip.u1,.suitpick .uc.u1{background:#e0a916;color:#2b2218}.colorchip.u2,.suitpick .uc.u2{background:#2d8a4e}.colorchip.u3,.suitpick .uc.u3{background:#2a5db0}
+.suitpick .uc{color:#fff;font-size:20px;font-weight:700;border-color:#fff}
+/* floating reactions and the reaction bar */
+#floats{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.emofloat{position:absolute;bottom:-60px;display:flex;flex-direction:column;align-items:center;animation:emoUp 3.6s ease-out forwards;will-change:transform,opacity}
+.emofloat .e{font-weight:900;color:var(--maroon);font-size:46px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+.emofloat .w{font-size:11px;background:rgba(43,34,24,.7);color:#fff;border-radius:999px;padding:1px 8px;margin-top:2px}
+body.hidecards .hand{display:none}
+body.hidecards .dock::before{content:"Cards hidden. Tap the eye above to show them";text-align:center;font-weight:700;padding:18px 8px;border-radius:12px;background:var(--panel);border:1px dashed var(--line)}
+body.hidecards .dock .actions{display:none}
+#predbar{position:fixed;left:10px;right:10px;top:70px;z-index:46;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:60vh;overflow:auto}
+#predbar[hidden]{display:none}
+#predbar .pr{margin:8px 0}#predbar .pr .t{display:flex;justify-content:space-between;font-size:14px}
+#predbar .bar{height:12px;border-radius:8px;background:var(--line);overflow:hidden;margin-top:3px}#predbar .bar i{display:block;height:100%;background:var(--gold);border-radius:8px;transition:width .4s}
+#fx{position:fixed;inset:0;z-index:90;pointer-events:none;width:100%;height:100%}
+#winbanner{position:fixed;left:8px;right:8px;top:14%;z-index:91;pointer-events:none;text-align:center;animation:wb 6.5s ease-out forwards}
+#winbanner div{display:inline-block;background:rgba(43,34,24,.88);color:#ffd76a;border:2px solid #ffd76a;border-radius:18px;padding:12px 20px;font-size:26px;font-weight:800;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+@keyframes wb{0%{opacity:0;transform:scale(.5)}10%{opacity:1;transform:scale(1.08)}16%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+.fakefloat{position:absolute;left:8%;right:8%;bottom:20%;text-align:center;animation:fk 4.2s ease-out forwards}
+.fakefloat b{display:block;font-size:24px;color:#fff}
+.fakefloat span{display:inline-block;margin-top:4px;background:#b3261e;color:#fff;border-radius:14px;padding:6px 14px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.fakefloat b{text-shadow:0 2px 8px rgba(0,0,0,.7)}
+@keyframes fk{0%{opacity:0;transform:translateY(40px) scale(.7)}12%{opacity:1;transform:translateY(0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translateY(-160px)}}
+@keyframes emoUp{0%{transform:translate(0,0) scale(.6);opacity:0}10%{opacity:1;transform:translate(0,-8vh) scale(1)}80%{opacity:1}100%{transform:translate(var(--dx,0),-85vh) scale(1.15);opacity:0}}
+#emobar{max-height:42vh;overflow:auto;position:fixed;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));z-index:45;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#emobar[hidden]{display:none}
+#emobar button{font-size:26px;border:0;background:transparent;padding:4px 7px;border-radius:10px}
+#emobar button:active{background:var(--gold-soft)}
+@media (prefers-reduced-motion:reduce){.emofloat{animation-duration:3.6s}}
+@media (prefers-reduced-motion:reduce){.pc{transition:none}}
+@media (max-width:400px){.bigcode{font-size:36px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay"></div>
+<div class="veil" id="chatveil" hidden>
+  <div class="sheet chat" role="dialog" aria-label="Table chat">
+    <div class="top"><h3 class="brand">Table chat</h3><button class="btn ghost small" id="chatclose">Close</button></div>
+    <div class="msgs" id="msgs" aria-live="polite"></div>
+    <div class="composer">
+      <input id="chatinput" maxlength="300" placeholder="Message the table" autocomplete="off" aria-label="Message">
+      <button class="btn" id="send">Send</button>
+    </div>
+  </div>
+</div>
+<div id="predbar" hidden></div><canvas id="fx"></canvas><div id="floats" aria-hidden="true"></div>
+<div id="emobar" hidden role="group" aria-label="Reactions"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ================= game rules (run only on the host) ================= */
+const SUITS = ["♥","♠","♦","♣"];
+const RED = [true,false,true,false];
+const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+const rk = n => n % 13 + 1;
+const st = n => Math.floor((n % 52) / 13);
+const lab = n => RANKS[rk(n)-1] + SUITS[st(n)];
+const FAKE_PEN = 5, SEVEN_HEARTS = 6, TOTAL_GAMES = 7, MIN_P = 2, MAX_P = 8;
+
+function rand(n){
+  const b = new Uint32Array(1), lim = Math.floor(4294967296 / n) * n;
+  let x; do { crypto.getRandomValues(b); x = b[0]; } while (x >= lim);
+  return x % n;
+}
+function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=rand(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function legal(table, n){
+  const t = table[st(n)], r = rk(n);
+  if (!t.lo) return r === 7;
+  if (r >= t.lo && r <= t.hi) return (t.d||1) > 1 && ((t.cn||{})[r]||0) < t.d;    // extra decks: a second copy can go on top of the same card
+  return r === t.lo - 1 || r === t.hi + 1;
+}
+function addLog(g,s){ g.log.unshift(s); g.log.length = Math.min(g.log.length, 12); }
+function totals(g){ return g.players.map((_,i)=>g.rounds.reduce((a,r)=>a+r.pts[i],0)); }
+function wins(g){ return g.players.map((_,i)=>g.rounds.filter(r=>r.winner===i).length); }
+function standings(g){
+  const t = totals(g), w = wins(g);
+  return g.players.map((_,i)=>i).sort((a,b)=> t[a]-t[b] || w[b]-w[a]);
+}
+function dealGame(players, round, rounds, penalty, v, decks){
+  decks = decks || 1;
+  const n = players.length;
+  const deck = shuffle(Array.from({length:52*decks},(_,i)=>i));
+  const hands = Array.from({length:n},()=>[]);
+  deck.forEach((c,k)=>hands[k % n].push(c));
+  hands.forEach(h=>h.sort((a,b)=>(a%52)-(b%52)||a-b));
+  const isSH = c => c % 52 === SEVEN_HEARTS;
+  const starter = hands.findIndex(h => h.some(isSH));
+  hands[starter].splice(hands[starter].findIndex(isSH),1);
+  const table = [0,1,2,3].map(()=>({lo:0,hi:0,cn:{},d:decks}));
+  table[0] = {lo:7,hi:7,cn:{7:1},d:decks};
+  const g = { v, phase:"playing", round, total:TOTAL_GAMES, decks, players, penalty, hands, table,
+    turn:(starter+1)%n, passes:players.map(()=>0), fakes:players.map(()=>0), notice:null, rounds, log:[], last:SEVEN_HEARTS };
+  addLog(g, `Game ${round}: ${players[starter].name} held 7♥ and opened`);
+  return g;
+}
+function finishRound(g, winner){
+  const pts = g.hands.map((h,j)=> h.reduce((a,c)=>a+rk(c),0) + g.passes[j]*g.penalty + (g.fakes?g.fakes[j]:0)*FAKE_PEN);
+  g.rounds.push({ pts, winner });
+  g.phase = g.round >= g.total ? "matchEnd" : "roundEnd";
+  addLog(g, `${g.players[winner].name} won game ${g.round}`);
+}
+function applyPlay(G, i, n){
+  const g = JSON.parse(JSON.stringify(G));
+  if (g.phase !== "playing" || g.turn !== i || !Number.isInteger(n)) return null;
+  const h = g.hands[i], k = h.indexOf(n);
+  if (k < 0 || !legal(g.table, n)) return null;
+  h.splice(k,1);
+  const t = g.table[st(n)], r = rk(n);
+  t.cn = t.cn || {};
+  if (!t.lo){ t.lo = r; t.hi = r; t.cn[r] = 1; } else if (r >= t.lo && r <= t.hi) t.cn[r] = (t.cn[r]||0) + 1; else { if (r < t.lo) t.lo = r; else t.hi = r; t.cn[r] = 1; }
+  g.v++; g.last = n;
+  addLog(g, `${g.players[i].name} played ${lab(n)}`);
+  if (h.length === 0) finishRound(g, i); else g.turn = (i+1) % g.players.length;
+  return g;
+}
+function applyPass(G, i){
+  const g = JSON.parse(JSON.stringify(G));
+  if (g.phase !== "playing" || g.turn !== i) return null;
+  if (g.hands[i].some(c => legal(g.table, c))){      // fake pass: you could have played
+    g.fakes = g.fakes || g.players.map(()=>0); g.fakes[i]++; g.v++; g.last = -1;
+    g.notice = { id:g.v, name:g.players[i].name, text:`just did a fake pass! +${FAKE_PEN} points` };
+    addLog(g, `${g.players[i].name} did a FAKE pass (+${FAKE_PEN} points)`);
+    g.turn = (i+1) % g.players.length;
+    return g;
+  }
+  g.passes[i]++; g.v++; g.last = -1;
+  addLog(g, `${g.players[i].name} passed` + (g.penalty ? ` (+${g.penalty})` : ""));
+  g.turn = (i+1) % g.players.length;
+  return g;
+}
+
+/* ================= Court Piece rules (run only on the host) ================= */
+// Four players, two teams (seats 1 and 3 against seats 2 and 4). The first 5 cards go out, the player after the dealer
+// picks the trump suit, then the other 8 cards go out. Follow suit if you can. Highest trump wins a trick, else highest card of the led suit.
+const COURT_PAUSE = 2200;
+const rv = n => rk(n) === 1 ? 14 : rk(n);
+function sortHand(h){ return h.slice().sort((a,b)=> st(a)-st(b) || rv(b)-rv(a)); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function courtNew(players, target, v){
+  const g = { kind:"court", v, phase:"deal", dealTeam:null, players, dealer:-1, chooser:-1, trump:-1, hands:[[],[],[],[]], rest:[[],[],[],[]],
+    turn:-1, lead:-1, trick:[], resolving:false, trickWinner:-1, tricks:[0,0,0,0], hand:1, hlog:[], score:[0,0], target, log:[], lastTrick:null };
+  addLog(g, "Match started. Any player can shuffle and deal the first hand");
+  return g;
+}
+// the dealer shuffles and deals: the first hand anyone may do it, afterwards the team that lost the last hand
+function courtShuffle(G, i){
+  const g = clone(G);
+  if (g.phase !== "deal" && g.phase !== "handEnd") return null;
+  if (g.dealTeam !== null && i % 2 !== g.dealTeam) return null;
+  if (g.phase === "handEnd") g.hand++;
+  const deck = shuffle(Array.from({length:52},(_,k)=>k));
+  g.hands = [0,1,2,3].map(p=>sortHand(deck.slice(p*5,p*5+5)));
+  g.rest = [0,1,2,3].map(p=>deck.slice(20+p*8,28+p*8));
+  g.dealer = i; g.chooser = (i+1)%4; g.turn = g.chooser; g.lead = g.chooser; g.trump = -1;
+  g.trick = []; g.tricks = [0,0,0,0]; g.resolving = false; g.trickWinner = -1; g.lastTrick = null; g.dealTeam = null;
+  g.phase = "trump"; g.v++;
+  addLog(g, `${g.players[i].name} shuffled and dealt hand ${g.hand}. ${g.players[g.chooser].name} picks the trump`);
+  return g;
+}
+function trickWinner(trick, trump){
+  let best = trick[0];
+  for (const t of trick.slice(1)){
+    const a = st(t.c) === trump, b = st(best.c) === trump;
+    if (a && !b) best = t;
+    else if (a === b && st(t.c) === st(best.c) && rv(t.c) > rv(best.c)) best = t;
+  }
+  return best.p;
+}
+function legalCourt(hand, trick, c){
+  if (!trick.length) return true;
+  const led = st(trick[0].c);
+  return st(c) === led || !hand.some(x=>st(x) === led);
+}
+function courtTrump(G, i, suit){
+  const g = clone(G);
+  if (g.phase !== "trump" || i !== g.chooser || !Number.isInteger(suit) || suit < 0 || suit > 3) return null;
+  g.hands = g.hands.map((h,p)=>sortHand(h.concat(g.rest[p]))); g.rest = [[],[],[],[]];
+  g.trump = suit; g.phase = "play"; g.turn = g.chooser; g.lead = g.chooser; g.v++;
+  addLog(g, `${g.players[i].name} chose ${SUITS[suit]} as trump`);
+  return g;
+}
+function courtPlay(G, i, c){
+  const g = clone(G);
+  if (g.phase !== "play" || g.resolving || g.turn !== i || !Number.isInteger(c)) return null;
+  const h = g.hands[i], k = h.indexOf(c);
+  if (k < 0 || !legalCourt(h, g.trick, c)) return null;
+  h.splice(k,1); g.trick.push({p:i, c}); g.v++;
+  if (g.trick.length === 4){
+    g.resolving = true; g.trickWinner = trickWinner(g.trick, g.trump);
+    addLog(g, `${g.players[g.trickWinner].name} won the trick`);
+  } else g.turn = (i+1)%4;
+  return g;
+}
+function courtResolve(G){
+  const g = clone(G);
+  if (!g.resolving) return g;
+  const w = g.trickWinner;
+  g.tricks[w]++; g.lastTrick = {cards:g.trick, winner:w}; g.trick = []; g.resolving = false; g.trickWinner = -1; g.v++;
+  if (g.hands.every(h=>h.length === 0)){
+    const t = [g.tricks[0]+g.tricks[2], g.tricks[1]+g.tricks[3]];
+    const team = t[0] >= 7 ? 0 : 1, court = t[team] === 13, pts = court ? 3 : 1;
+    g.score = g.score.slice(); g.score[team] += pts;
+    g.hlog = g.hlog.concat([{trump:g.trump, tricks:t, team, pts, court}]);
+    g.phase = g.score[team] >= g.target ? "matchEnd" : "handEnd"; g.dealTeam = 1 - team;
+    addLog(g, `Team ${team===0?"A":"B"} won hand ${g.hand}${court?" with a Court":""}`);
+  } else { g.turn = w; g.lead = w; }
+  return g;
+}
+function courtView(g, i){
+  return { v:g.v, dealTeam:g.dealTeam, phase:g.phase, players:g.players.map(p=>({name:p.name})), dealer:g.dealer, chooser:g.chooser, trump:g.trump,
+    turn:g.turn, lead:g.lead, trick:g.trick, resolving:g.resolving, trickWinner:g.trickWinner, tricks:g.tricks, hand:g.hand,
+    hlog:g.hlog, score:g.score, target:g.target, counts:g.hands.map(h=>h.length), myHand:g.hands[i], log:g.log, lastTrick:g.lastTrick };
+}
+
+/* ================= full rules, shown under each game ================= */
+const RULES = {
+badam: `
+<h4>Players and cards</h4><p>2 to 8 players with one 52-card deck. The whole deck is dealt out one card at a time, so some players may hold one card more than others. Cards run Ace (1) up to King (13).</p>
+<h4>Goal</h4><p>Be the first to empty your hand in each game. A match is 7 games. The player with the lowest total after 7 games wins.</p>
+<h4>Start</h4><p>The 7 of hearts is placed on the table automatically as the opening card. The player after whoever holds the 7 of hearts plays first.</p>
+<h4>Playing</h4><ul><li>On your turn you must play a card if you can. Legal cards are any 7 (which starts a new suit row) or the card one rank higher or lower than a card already on the table in the same suit, extending a row outwards from its 7.</li><li>If you have no legal card you must pass. You may not pass while you hold a legal card.</li><li>The first player to play their last card wins the game.</li></ul>
+<h4>Scoring</h4><p>The winner scores 0. Everyone else scores the face value of the cards left in their hand (Ace 1, Jack 11, Queen 12, King 13). If the host switches on the pass penalty, each pass adds 5 points. After 7 games the lowest total wins. A tie goes to the player with more game wins.</p>
+<h4>App notes</h4><p>Turn hints highlight playable cards and can be switched off per player in Settings. Your own score and rank sit above your hand.</p>`,
+court: `
+<h4>Players and teams</h4><p>Exactly 4 players in 2 teams of two. Partners sit opposite each other. Pick your team in the lobby, two players per team.</p>
+<h4>Goal</h4><p>Win tricks. A team that takes 7 or more of the 13 tricks wins the hand and scores 1 point. Taking all 13 tricks (a Court) scores 3 points. The first team to the target score (3, 5, 7 or 10, set by the room creator) wins the match.</p>
+<h4>Shuffle and deal</h4><p>Any player may shuffle and deal the first hand. After that, the team that lost the previous hand shuffles and deals, and either player of that team can tap Shuffle and deal.</p>
+<h4>Trump</h4><p>Each player first receives 5 cards. The player after the dealer looks at them and picks the trump suit. Then everyone receives the other 8 cards.</p>
+<h4>Play</h4><ul><li>The player who picked the trump leads the first trick with any card.</li><li>Everyone must follow the suit led if they can. If you cannot, play any card, including a trump.</li><li>The highest trump wins the trick. With no trump in it, the highest card of the suit led wins. Ace is high.</li><li>The winner of a trick leads the next one.</li></ul>`,
+patti: `
+<h4>Players and cards</h4><p>2 to 6 players, one 52-card deck. Everyone starts a match with 1000 chips. A match is 10 hands, or fewer if only one player can still afford the boot.</p>
+<h4>Each hand</h4><p>Everyone puts the boot (10 chips) into the pot and receives 3 cards face down. Play goes round the table starting with the player after the dealer.</p>
+<h4>Blind and seen</h4><ul><li>A player who has not looked at their cards is <b>blind</b>. Tap See cards at any time to become <b>seen</b>.</li><li>The current bet starts at 10. A blind player pays the current bet to stay in (Chaal). A seen player pays double.</li><li>Raise doubles the current bet (up to 80), and you pay at your own rate (blind pays the new bet, seen pays double).</li><li>Pack folds your hand and you lose what you put in.</li></ul>
+<h4>Show</h4><p>When only two players remain, either may ask for a show by paying the Chaal amount (or all their chips if they have less). Both hands are revealed and the better hand takes the pot. If the hands tie, the player who asked for the show loses. If everyone else packs, the last player wins without showing.</p>
+<h4>Hand ranking, best first</h4><ol><li><b>Trail</b>: three cards of the same rank. Three Aces is highest.</li><li><b>Pure sequence</b>: three consecutive cards of the same suit.</li><li><b>Sequence</b>: three consecutive cards of mixed suits.</li><li><b>Colour</b>: three cards of the same suit, not in sequence.</li><li><b>Pair</b>: two cards of the same rank.</li><li><b>High card</b>: none of the above.</li></ol><p>Among sequences, A-K-Q is highest, then A-2-3, then K-Q-J down to 4-3-2. Ace is high otherwise. Equal categories are compared by the highest cards.</p>
+<h4>Winning the match</h4><p>After the last hand the player with the most chips wins. This is a game of friends for fun. No real money is involved in the app.</p>`,
+teendo: `
+<h4>Players and cards</h4><p>3 players. A 30-card pack is used: A, K, Q, J, 10, 9, 8 of every suit plus the 7 of hearts and the 7 of spades. Cards rank A (high) down to 7. Each player gets 10 cards.</p>
+<h4>Quotas</h4><p>Each deal, every player has a number of tricks they aim to win: the <b>dealer needs 2</b>, the player after the dealer (who picks the trump and leads) <b>needs 5</b>, and the third player <b>needs 3</b>. That makes 10 tricks in total. The dealer changes every deal, so quotas rotate.</p>
+<h4>Deal and trump</h4><p>Each player first receives 5 cards. The player who needs 5 tricks picks the trump suit. Then everyone receives 5 more cards.</p>
+<h4>Play</h4><ul><li>The player who needs 5 leads the first trick with any card.</li><li>Follow the suit led if you can. If you cannot, play any card, including a trump.</li><li>The highest trump wins. With no trump, the highest card of the suit led wins. The winner leads the next trick.</li></ul>
+<h4>Pulling cards (from the second deal)</h4><p>Players who won more tricks than their quota in the last deal may pull cards. For every trick over quota, they take one random card from a player who fell short of their quota, then give back one card of their choice (not the one just taken). Players who fell short therefore lose a card they did not choose.</p>
+<h4>Scoring</h4><p>You score 1 point per trick won, plus a 3-point bonus if you reach your quota. A match is 3 deals. The highest total wins. (The app does not use the optional rule that you must keep two cards of a suit when giving a card back.)</p>`,
+rummy: `
+<h4>Players and cards</h4><p>2 to 6 players. Two 52-card decks plus 2 printed jokers. Each player gets 13 cards. A card is turned up to start the discard pile, and another card decides the <b>wild joker</b>: every card of that rank is a joker for the deal. Printed jokers are always jokers.</p>
+<h4>Goal</h4><p>Arrange all 13 cards into valid groups and declare. A valid hand needs at least <b>two sequences</b>, and at least one of them must be a <b>pure sequence</b> (no joker used). The remaining cards form further sequences or sets.</p>
+<h4>Groups</h4><ul><li><b>Sequence</b>: 3 or more consecutive cards of the same suit, for example 4-5-6 of hearts. Ace can be low (A-2-3) or high (Q-K-A) but not both (K-A-2 is not allowed).</li><li><b>Pure sequence</b>: a sequence with no jokers.</li><li><b>Set</b>: 3 or 4 cards of the same rank in different suits.</li><li>Jokers can stand in for any card in a sequence or a set.</li></ul>
+<h4>A turn</h4><p>Draw one card from the stock or take the top of the discard pile, then discard one card. When your 13 remaining cards form a valid hand, select the card you want to finish with and tap <b>Declare</b>. The app checks the hand for you and refuses a declaration that is not valid, so there is no penalty for trying.</p>
+<h4>Scoring</h4><p>The player who declares scores 0. Everyone else scores the value of their cards that are not in valid groups (Ace, King, Queen, Jack 10 points each, number cards face value, jokers 0), up to 80. If you have no pure sequence, you score the full 80. If you have a pure sequence but no second sequence, only the pure sequence counts as grouped. A match is 3 deals and the lowest total wins.</p>
+<h4>App notes</h4><p>Your hand is sorted by suit. The app shows what you would score if you declared now. Because it finds the best grouping for you, you do not need to arrange the cards yourself.</p>`,
+uno: `
+<h4>Players and cards</h4><p>2 to 6 players. Colour Rush is an Uno-style game with a 108-card deck: four colours (red, yellow, green, blue) with numbers 0 to 9, plus Skip, Reverse and Draw Two in every colour, and Wild and Wild Draw Four cards. Each player starts with 7 cards.</p>
+<h4>Goal</h4><p>Be first to play all your cards. Each round winner scores the points left in the other players' hands. The first player to reach 150 points wins the match.</p>
+<h4>Playing a card</h4><p>On your turn, play a card that matches the top card by <b>colour</b>, <b>number</b> or <b>symbol</b>, or play a Wild. If you cannot or do not want to play, tap Draw. If the card you draw can be played, you may play it at once or keep it and pass.</p>
+<h4>Special cards</h4><ul><li><b>Skip</b>: the next player misses a turn.</li><li><b>Reverse</b>: the direction of play flips. With 2 players it acts as a Skip.</li><li><b>Draw Two</b>: the next player draws 2 cards and misses a turn.</li><li><b>Wild</b>: choose the next colour.</li><li><b>Wild Draw Four</b>: choose the colour, the next player draws 4 and misses a turn. You may only play it if you hold no card of the current colour.</li></ul>
+<h4>Calling UNO</h4><p>When you have 2 cards, tap <b>UNO!</b> before you play your second-to-last card. If you forget, you draw 2 cards as a penalty.</p>
+<h4>Scoring</h4><p>Number cards count their number, Skip, Reverse and Draw Two are 20 each, Wild cards are 50 each. House rules in this app: draw cards do not stack and there is no challenge on Wild Draw Four, because the app enforces the colour restriction for you. "Uno" is a trademark of its owner. This is an independent game in the same style.</p>`,
+dehla: `
+<h4>Players and teams</h4><p>4 players in 2 teams of two, partners opposite each other. One 52-card deck, 13 cards each. Cards rank A (high) down to 2.</p>
+<h4>Goal</h4><p>Capture the four tens (the <i>dehlas</i>). A team that takes all four tens scores a <b>Kot</b>.</p>
+<h4>Trump</h4><p>There is no trump at the start. Players must follow suit if they can. The first player who cannot follow the suit led plays any card, and the suit of that card becomes the trump for the rest of the hand.</p>
+<h4>Winning a trick</h4><p>The highest trump wins. With no trump in the trick, the highest card of the suit led wins. The winner leads the next trick.</p>
+<h4>The key rule: collecting cards</h4><ul><li>Cards of a trick are not collected immediately. They go to a pile in the centre.</li><li>The pile is collected only when the <b>same player wins two tricks in a row</b>. That player's team takes the whole pile, then a new pile starts.</li><li>If two different players win consecutive tricks (even partners), nothing is collected and the pile keeps growing.</li><li>Whoever wins the 13th trick collects the pile whatever happened before.</li></ul>
+<h4>Scoring (house rules in this app)</h4><p>The team that collects more tens wins the hand and scores 1 point. If the tens split 2 to 2, the team with more collected cards wins. If that is also equal, the hand is drawn. Taking all four tens (a Kot) scores 3 points. The first team to the target (3, 5, 7 or 10) wins the match.</p>
+<h4>Dealing</h4><p>The deal normally passes to the next player after each hand. If the team that did not deal wins the hand without a Kot, the same dealer deals again. If the team that did not deal wins by Kot, the dealer's partner deals next.</p>`
+};
+
+/* ================= more games: shared helpers ================= */
+const GAMES = {};
+const GAME_INFO = {
+  badam:{name:"Badam Sat", min:2, max:8, teams:false, tag:"Sevens. Build each suit out from the 7. First to empty their hand wins."},
+  court:{name:"Court Piece", min:4, max:4, teams:true, tag:"Trump trick game in two teams. Win 7 of 13 tricks."},
+  patti:{name:"Teen Patti", min:2, max:6, teams:false, tag:"Three-card betting game. Blind or seen, pack or show."},
+  teendo:{name:"Teen Do Paanch", min:3, max:3, teams:false, tag:"3-2-5. Each player has a trick quota. Make yours, steal cards."},
+  rummy:{name:"Rummy", min:2, max:6, teams:false, tag:"13-card Indian rummy. Pure sequence, a second sequence, then sets."},
+  uno:{name:"Colour Rush", min:2, max:6, teams:false, tag:"Uno-style. Match colour or number, first to empty their hand."},
+  dehla:{name:"Dehla Pakad", min:4, max:4, teams:true, tag:"Partners catch the four tens. Collect only on back-to-back wins."}
+};
+const TEAMED = k => !!(GAME_INFO[k] && GAME_INFO[k].teams);
+const AUTO_MS = 1800;
+const tn = t => t ? "B" : "A";
+function ids(n){ return Array.from({length:n},(_,i)=>i); }
+function nextIdx(g, i, dir, skipFn){ const n = g.players.length; let k = i; do { k = (k + (dir||1) + n) % n; } while (skipFn && skipFn(k)); return k; }
+function strip(items){
+  return `<div class="opps">${items.map(o=>`<div class="opp ${o.turn?"turn":""}"><div class="n">${esc(o.name)}</div><div class="c">${o.sub}</div>${o.extra||""}</div>`).join("")}</div>`;
+}
+function shell(V, title, chips, body, dock){
+  const logs = V.g.log.map(l=>`<div>${esc(l)}</div>`).join("");
+  return `
+  <div class="top"><div class="brand">${title}</div>${chips||""}<span class="chip" id="net" aria-label="Connection">…</span></div>
+  <div class="top"><button class="btn ghost small" id="scores">Scoreboard</button>${chatBtn()}<button class="btn ghost small" id="settings">Settings</button><span style="margin-left:auto"></span><button class="btn ghost small" id="leave">Leave</button></div>
+  ${body}
+  <details class="log" id="logbox" ${S.logOpen?"open":""}><summary>Game log · Room ${esc(V.code)}</summary><div class="logl">${logs}</div></details>
+  <div class="dock">${dock}</div>`;
+}
+function gb(label, a, extra, cls, dis){ return `<button class="btn ${cls||""}" data-ga="${a}" ${extra||""} ${dis?"disabled":""}>${label}</button>`; }
+function tileHTML(c, cls, idx, extraAttr){ // 52-card tile, double-deck aware (>=104 = printed joker)
+  if (c >= 104) return `<button class="pc joker ${cls||""}" data-gi="${idx}" ${extraAttr||""} aria-label="Joker"><span class="mid">★</span><span class="tl">J<br>K</span><span class="br">J<br>K</span></button>`;
+  return cardHTML(c % 52, cls, `data-gi="${idx}" ${extraAttr||""}`);
+}
+function backTile(cls){ return `<span class="pc back ${cls||""}" aria-hidden="true"></span>`; }
+function simpleScores(V, heads, rows){
+  return `<div class="tablewrap"><table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.lead?"lead":""}">${r.cells.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function autoHookFor(g){ return g && g.auto; }
+
+/* ================= Teen Patti ================= */
+const PT = {START:1000, BOOT:10, MAXSTAKE:80, HANDS:10};
+function pRank(cards){
+  const r = cards.map(c=>{ const x = rk(c); return x===1 ? 14 : x; }).sort((a,b)=>b-a), s = cards.map(st);
+  const flush = s[0]===s[1] && s[1]===s[2], key = r.join(",");
+  if (r[0]===r[1] && r[1]===r[2]) return [6,r[0],0,0];
+  let sk = 0;
+  if (key==="14,13,12") sk = 13; else if (key==="14,3,2") sk = 12; else if (r[0]-r[1]===1 && r[1]-r[2]===1) sk = r[0]-2;
+  if (sk) return [flush?5:4, sk,0,0];
+  if (flush) return [3,...r];
+  if (r[0]===r[1]) return [2,r[0],r[2],0];
+  if (r[1]===r[2]) return [2,r[1],r[0],0];
+  return [1,...r];
+}
+function pCmp(a,b){ for (let k=0;k<4;k++){ if (a[k]!==b[k]) return a[k]-b[k]; } return 0; }
+const P_NAMES = ["","High card","Pair","Colour","Sequence","Pure sequence","Trail"];
+function pattiNew(players, v, round, chips, dealer){
+  const n = players.length, deck = shuffle(ids(52));
+  const out = chips.map(c=>c < PT.BOOT), hands = players.map(()=>[]);
+  let k = 0; const c2 = chips.slice(); let pot = 0;
+  ids(n).forEach(i=>{ if (!out[i]){ hands[i] = deck.slice(k,k+3); k += 3; c2[i] -= PT.BOOT; pot += PT.BOOT; } });
+  let t = dealer; do { t = (t+1) % n; } while (out[t]);
+  const g = { kind:"patti", v, phase:"bet", players, chips:c2, hands, seen:players.map(()=>false), folded:out.slice(), out, pot, stake:PT.BOOT,
+    turn:t, dealer, round, reveal:null, result:null, log:[], hist:[] };
+  addLog(g, `Hand ${round}: everyone put ${PT.BOOT} in as the boot. ${players[t].name} acts first`);
+  return g;
+}
+function pattiAct(G, i, m){
+  const g = clone(G), n = g.players.length, nm = x=>g.players[x].name;
+  const alive = ()=>ids(n).filter(x=>!g.folded[x]);
+  const cost = (x,s)=> g.seen[x] ? 2*s : s;
+  const pay = (x,c)=>{ g.chips[x] -= c; g.pot += c; };
+  const finish = (w, by)=>{
+    g.chips[w] += g.pot; g.result = {winner:w, pot:g.pot, by}; g.pot = 0;
+    g.hist = g.hist.concat([{w, by, chips:g.chips.slice()}]);
+    const elig = ids(n).filter(x=>g.chips[x] >= PT.BOOT).length;
+    g.phase = (g.round >= PT.HANDS || elig <= 1) ? "matchEnd" : "handEnd";
+    addLog(g, `${nm(w)} won the pot${by==="show"?" at the show":""}`);
+  };
+  const advance = ()=>{ let t = g.turn; do { t = (t+1) % n; } while (g.folded[t]); g.turn = t; };
+  if (g.phase === "handEnd" && m.a === "next"){
+    let d = g.dealer; do { d = (d+1) % n; } while (g.chips[d] < PT.BOOT);
+    return pattiNew(g.players, g.v+1, g.round+1, g.chips, d);
+  }
+  if (g.phase === "matchEnd" && m.a === "newmatch") return pattiNew(g.players, g.v+1, 1, g.players.map(()=>PT.START), 0);
+  if (g.phase !== "bet") return null;
+  if (m.a === "see"){ if (g.seen[i] || g.folded[i]) return null; g.seen[i] = true; g.v++; addLog(g, `${nm(i)} looked at their cards`); return g; }
+  if (g.turn !== i) return null;
+  if (m.a === "chaal" || m.a === "raise"){
+    const ns = m.a==="raise" ? g.stake*2 : g.stake;
+    if (ns > PT.MAXSTAKE) return null;
+    const c = cost(i, ns); if (g.chips[i] < c) return null;
+    g.stake = ns; pay(i, c);
+    addLog(g, `${nm(i)} ${g.seen[i]?"(seen)":"(blind)"} ${m.a==="raise"?"raised to":"bet"} ${c}`);
+  } else if (m.a === "pack"){ g.folded[i] = true; addLog(g, `${nm(i)} packed`); }
+  else if (m.a === "show"){
+    const al = alive(); if (al.length !== 2) return null;
+    const o = al.find(x=>x!==i), c = Math.min(cost(i, g.stake), g.chips[i]);
+    pay(i, c); g.reveal = {}; g.reveal[i] = g.hands[i]; g.reveal[o] = g.hands[o];
+    const cmp = pCmp(pRank(g.hands[i]), pRank(g.hands[o]));
+    const w = cmp > 0 ? i : o;
+    addLog(g, `${nm(i)} asked for a show: ${nm(i)} ${P_NAMES[pRank(g.hands[i])[0]]}, ${nm(o)} ${P_NAMES[pRank(g.hands[o])[0]]}`);
+    g.v++; finish(w, "show"); return g;
+  } else return null;
+  g.v++;
+  const al = alive();
+  if (al.length === 1){ finish(al[0], "pack"); return g; }
+  advance(); return g;
+}
+function pattiView(g, i){
+  const n = g.players.length;
+  return { kind:"patti", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), chips:g.chips, seen:g.seen, folded:g.folded, out:g.out, pot:g.pot,
+    stake:g.stake, turn:g.turn, dealer:g.dealer, round:g.round, reveal:g.reveal, result:g.result, log:g.log, hist:g.hist,
+    myHand: g.seen[i] || g.phase!=="bet" ? g.hands[i] : null, myHasCards: !g.out[i] };
+}
+function pattiRender(V){
+  const g = V.g, me = V.me, n = g.players.length, myTurn = g.phase==="bet" && g.turn===me && !g.folded[me];
+  const alive = ids(n).filter(x=>!g.folded[x]);
+  const opps = ids(n-1).map(k=>(me+1+k)%n).map(i=>{
+    const tag = g.out[i] ? "out of chips" : g.folded[i] ? "packed" : g.seen[i] ? "seen" : "blind";
+    const rv = g.reveal && g.reveal[i] ? `<div class="fan2">${g.reveal[i].map(c=>cardHTML(c,"mini","disabled")).join("")}</div>` : "";
+    return {name:g.players[i].name + (V.seats[i]&&!V.seats[i].online?" (offline)":""), sub:`${g.chips[i]} chips · ${tag}`, turn:g.phase==="bet"&&g.turn===i, extra:rv};
+  });
+  const cost = x=> g.seen[me] ? 2*x : x;
+  const stakeNext = Math.min(g.stake*2, PT.MAXSTAKE);
+  const can = c => g.chips[me] >= c;
+  let banner;
+  if (g.phase==="bet") banner = myTurn ? "Your turn" : `Waiting for ${esc(g.players[g.turn].name)}`;
+  else banner = g.result ? `${esc(g.players[g.result.winner].name)} won ${g.result.pot} chips` : "";
+  const hand = g.myHand ? g.myHand.map((c,k)=>cardHTML(c,"",'disabled')).join("") : (g.out[me] ? "" : [0,1,2].map(()=>backTile()).join(""));
+  const myCat = g.myHand && g.phase==="bet" ? `<div class="note" style="text-align:center">You hold: <b>${P_NAMES[pRank(g.myHand)[0]]}</b></div>` : "";
+  const acts = g.phase==="bet" && !g.folded[me] ? `<div class="actions wrap">
+      ${g.seen[me] ? "" : gb("See cards","see","", "gold")}
+      ${myTurn ? gb(`Chaal ${cost(g.stake)}`,"chaal","",""  ,!can(cost(g.stake))) + gb(`Raise ${cost(stakeNext)}`,"raise","","ghost", g.stake>=PT.MAXSTAKE || !can(cost(stakeNext))) + gb("Pack","pack","","ghost")
+        + (alive.length===2 ? gb(`Show ${Math.min(cost(g.stake),g.chips[me])}`,"show","","gold") : "") : ""}</div>` : "";
+  const body = `${strip(opps)}
+    <div class="potbox"><div><small>Pot</small><b>${g.pot}</b></div><div><small>Current bet</small><b>${g.stake}</b></div><div><small>Your chips</small><b>${g.chips[me]}</b></div></div>
+    <div class="banner ${myTurn?"me":""}">${banner}</div>
+    ${g.reveal && g.reveal[me] ? `<div class="note" style="text-align:center">Show: ${Object.keys(g.reveal).map(k=>`${esc(g.players[k].name)} had ${g.reveal[k].map(lab).join(" ")}`).join(" · ")}</div>`:""}`;
+  return shell(V,"Teen Patti",`<span class="chip">Hand <b>${g.round}</b> of ${PT.HANDS}</span>`, body, `${acts}<div class="hand fixed" >${hand}</div>${myCat}`);
+}
+function pattiOverlay(V){
+  const g = V.g;
+  if (g.phase==="matchEnd" || (g.phase==="handEnd" && S.dismissed!==g.round)){
+    const ord = ids(g.players.length).sort((a,b)=>g.chips[b]-g.chips[a]);
+    const rows = ord.map((i,k)=>({lead:k===0, cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.chips[i]]}));
+    const w = g.result ? esc(g.players[g.result.winner].name) : "";
+    const reveal = g.reveal ? `<div class="note">${Object.keys(g.reveal).map(k=>`${esc(g.players[k].name)}: ${g.reveal[k].map(lab).join(" ")} (${P_NAMES[pRank(g.reveal[k])[0]]})`).join("<br>")}</div>` : "";
+    if (g.phase==="matchEnd") return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">Match over</div><h2>${esc(g.players[ord[0]].name)} wins with ${g.chips[ord[0]]} chips</h2></div>${reveal}${simpleScores(V,["Player","Chips"],rows)}<button class="btn" data-ga="newmatch">Play a new match</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+    return `<div class="veil"><div class="sheet"><h2>${w} won ${g.result.pot} chips</h2>${reveal}${simpleScores(V,["Player","Chips"],rows)}<button class="btn" data-ga="next">Deal hand ${g.round+1}</button><button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  if (g.phase==="handEnd") return `<div class="floatbtn"><button class="btn" data-ga="next">Deal hand ${g.round+1}</button></div>`;
+  return "";
+}
+function pattiScores(V){ const g = V.g; return simpleScores(V,["Player","Chips"], ids(g.players.length).sort((a,b)=>g.chips[b]-g.chips[a]).map((i,k)=>({lead:k===0,cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.chips[i]]}))); }
+GAMES.patti = { newGame:(pl)=>pattiNew(pl,1,1,pl.map(()=>PT.START),0), act:pattiAct, view:pattiView, render:pattiRender, overlay:pattiOverlay, scores:pattiScores };
+
+/* ================= Teen Do Paanch (3-2-5) ================= */
+function tdDeck(){ const d = []; for (let c=0;c<52;c++){ const r = rk(c); if (r===1 || r>=8 || c===6 || c===19) d.push(c); } return d; }
+const tdv = c => { const r = rk(c); return r===1 ? 14 : r; };
+function tdQuota(dealer){ const q = [0,0,0]; q[dealer]=2; q[(dealer+1)%3]=5; q[(dealer+2)%3]=3; return q; }
+function tdPulls(prev){
+  if (!prev) return [];
+  const over = [], under = [];
+  ids(3).forEach(i=>{ const d = prev.tricks[i]-prev.quota[i]; if (d>0) over.push([i,d]); if (d<0) under.push([i,-d]); });
+  const q = [];
+  for (const [o,d] of over) for (let k=0;k<d;k++){ const u = under.find(x=>x[1]>0); if (!u) break; u[1]--; q.push({taker:o, giver:u[0]}); }
+  return q;
+}
+function tdNew(players, v, deal, dealer, score, prev){
+  const deck = shuffle(tdDeck());
+  const g = { kind:"teendo", v, phase:"trump", players, deal, dealer, quota:tdQuota(dealer), chooser:(dealer+1)%3, trump:-1,
+    hands:ids(3).map(p=>sortHand(deck.slice(p*5,p*5+5))), rest:ids(3).map(p=>deck.slice(15+p*5,20+p*5)), turn:(dealer+1)%3,
+    trick:[], tricks:[0,0,0], resolving:false, trickWinner:-1, score, prev, pulls:tdPulls(prev), pulled:-1, log:[], auto:false, lastRes:null };
+  addLog(g, `Deal ${deal} of 3: ${players[dealer].name} deals. Quotas: ${players.map((p,i)=>`${p.name} ${g.quota[i]}`).join(", ")}`);
+  return g;
+}
+function tdStartPull(g){
+  const e = g.pulls[0], h = g.hands[e.giver], k = rand(h.length);
+  const c = h.splice(k,1)[0]; g.hands[e.taker] = sortHand(g.hands[e.taker].concat([c])); g.pulled = c;
+  addLog(g, `${g.players[e.taker].name} pulled a card from ${g.players[e.giver].name}`);
+}
+function tdLegal(hand, trick, c){ if (!trick.length) return true; const led = st(trick[0].c); return st(c)===led || !hand.some(x=>st(x)===led); }
+function tdWinner(trick, trump){
+  let b = trick[0];
+  for (const t of trick.slice(1)){ const a = st(t.c)===trump, bb = st(b.c)===trump; if (a && !bb) b = t; else if (a===bb && st(t.c)===st(b.c) && tdv(t.c)>tdv(b.c)) b = t; }
+  return b.p;
+}
+function tdAct(G, i, m){
+  const g = clone(G);
+  if (m.a === "trump" && g.phase==="trump" && i===g.chooser && Number.isInteger(m.suit) && m.suit>=0 && m.suit<4){
+    g.trump = m.suit; g.hands = g.hands.map((h,p)=>sortHand(h.concat(g.rest[p]))); g.rest = [[],[],[]];
+    addLog(g, `${g.players[i].name} chose ${SUITS[m.suit]} as trump`);
+    if (g.pulls.length){ g.phase = "pull"; tdStartPull(g); } else { g.phase = "play"; g.turn = g.chooser; }
+    g.v++; return g;
+  }
+  if (m.a === "ret" && g.phase==="pull" && g.pulls.length && i===g.pulls[0].taker){
+    const e = g.pulls[0], c = m.card;
+    if (c === g.pulled || !g.hands[i].includes(c)) return null;
+    g.hands[i].splice(g.hands[i].indexOf(c),1); g.hands[e.giver] = sortHand(g.hands[e.giver].concat([c]));
+    g.pulls.shift(); g.pulled = -1;
+    if (g.pulls.length) tdStartPull(g); else { g.phase = "play"; g.turn = g.chooser; }
+    g.v++; return g;
+  }
+  if (m.a === "play" && g.phase==="play" && !g.resolving && g.turn===i){
+    const h = g.hands[i], k = h.indexOf(m.card);
+    if (k<0 || !tdLegal(h, g.trick, m.card)) return null;
+    h.splice(k,1); g.trick.push({p:i, c:m.card}); g.v++;
+    if (g.trick.length===3){ g.resolving = true; g.auto = true; g.trickWinner = tdWinner(g.trick, g.trump); addLog(g, `${g.players[g.trickWinner].name} won the trick`); }
+    else g.turn = (i+1)%3;
+    return g;
+  }
+  if (m.a === "next" && g.phase==="dealEnd") return tdNew(g.players, g.v+1, g.deal+1, (g.dealer+1)%3, g.score, {tricks:g.lastRes.tricks, quota:g.quota});
+  if (m.a === "newmatch" && g.phase==="matchEnd") return tdNew(g.players, g.v+1, 1, rand(3), [0,0,0], null);
+  return null;
+}
+function tdAuto(G){
+  const g = clone(G); g.auto = false;
+  if (!g.resolving) return g;
+  const w = g.trickWinner; g.tricks[w]++; g.lastTrick = {cards:g.trick, winner:w}; g.trick = []; g.resolving = false; g.trickWinner = -1; g.v++;
+  if (g.hands.every(h=>h.length===0)){
+    g.lastRes = {tricks:g.tricks.slice()};
+    g.score = g.score.map((s,i)=> s + g.tricks[i] + (g.tricks[i] >= g.quota[i] ? 3 : 0));
+    g.phase = g.deal >= 3 ? "matchEnd" : "dealEnd";
+    addLog(g, ids(3).map(i=>`${g.players[i].name} ${g.tricks[i]}/${g.quota[i]}`).join(", "));
+  } else g.turn = w;
+  return g;
+}
+function tdView(g, i){
+  return { kind:"teendo", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), deal:g.deal, dealer:g.dealer, quota:g.quota, chooser:g.chooser, trump:g.trump,
+    turn:g.turn, trick:g.trick, tricks:g.tricks, resolving:g.resolving, trickWinner:g.trickWinner, score:g.score, log:g.log, counts:g.hands.map(h=>h.length), myHand:g.hands[i],
+    pull: g.pulls.length ? g.pulls[0] : null, pulled: g.pulls.length && g.pulls[0].taker===i ? g.pulled : -1, lastRes:g.lastRes };
+}
+function tdRender(V){
+  const g = V.g, me = V.me, hints = CFG.hints;
+  const myTurn = g.phase==="play" && !g.resolving && g.turn===me, choose = g.phase==="trump" && g.chooser===me;
+  const retting = g.phase==="pull" && g.pull && g.pull.taker===me;
+  const legalS = new Set(g.myHand.filter(c=>tdLegal(g.myHand, g.trick, c)));
+  if (S.selected!=null && !((myTurn && (!hints || legalS.has(g.myHand[S.selected]))) || retting)) S.selected = null;
+  const slots = ids(3).map(k=>{ const p = (me+k)%3, tc = g.trick.find(x=>x.p===p);
+    return `<div class="tslot ${g.phase==="play"&&!g.resolving&&g.turn===p?"turn":""} ${g.resolving&&g.trickWinner===p?"win":""}"><span class="nm">${esc(g.players[p].name)}${p===me?" (you)":""}</span>${tc?cardHTML(tc.c,"mini","disabled"):`<div class="tempty"></div>`}<span class="cnt">${g.tricks[p]}/${g.quota[p]} tricks</span></div>`; }).join("");
+  let banner;
+  if (g.phase==="trump") banner = choose ? "You choose the trump. You need 5 tricks" : `${esc(g.players[g.chooser].name)} is choosing the trump`;
+  else if (g.phase==="pull") banner = retting ? "You pulled a card. Choose one to give back" : `${esc(g.players[g.pull.taker].name)} is returning a card`;
+  else if (g.phase==="play") banner = g.resolving ? `${esc(g.players[g.trickWinner].name)} wins the trick` : myTurn ? (g.trick.length?"Your turn":"Your turn. Lead any card") : `Waiting for ${esc(g.players[g.turn].name)}`;
+  else banner = "Deal over";
+  const trumpTxt = g.trump>=0 ? `<b style="color:${RED[g.trump]?"#ffaaa4":"#fff"}">${SUITS[g.trump]}</b>` : "<b>?</b>";
+  const tiles = g.myHand.map((c,k)=>{ const ok = myTurn ? (!hints || legalS.has(c)) : retting ? c!==g.pulled : false;
+    return cardHTML(c, (myTurn&&hints? (ok?"ok":"dim"):"")+(retting&&c===g.pulled?" ok":"")+(S.selected===k?" sel":""), `data-gi="${k}"`); }).join("");
+  const pick = choose ? `<div class="suitpick">${[0,1,2,3].map(s=>`<button data-ga="trump" data-suit="${s}" class="${RED[s]?"red":""}">${SUITS[s]}</button>`).join("")}</div>`
+    : (myTurn ? `<div class="actions"><button class="btn" data-ga="${"play"}" data-sel="1" ${S.selected==null?"disabled":""}>${S.selected==null?"Select a card":"Play "+lab(g.myHand[S.selected])}</button></div>`
+    : retting ? `<div class="actions"><button class="btn" data-ga="ret" data-sel="1" ${S.selected==null?"disabled":""}>${S.selected==null?"Select a card to give back":"Give back "+lab(g.myHand[S.selected])}</button></div>` : "");
+  const body = `<div class="cscore3">${ids(3).map(p=>`<div class="team ${p===me?"me":""}"><small>${esc(g.players[p].name)}</small><b>${g.score[p]}</b><span class="nm">needs ${g.quota[p]}</span></div>`).join("")}</div>
+    <div class="banner ${(myTurn||choose||retting)?"me":""}">${banner}</div>
+    <div class="ttable tri">${slots}<div class="tcenter">Trump${trumpTxt}</div></div>`;
+  return shell(V,"Teen Do Paanch",`<span class="chip">Deal <b>${g.deal}</b> of 3</span>`, body, `${pick}<div class="hand" style="--cw:${fitCW(g.myHand.length)}px">${tiles}</div>`);
+}
+function tdOverlay(V){
+  const g = V.g;
+  if (g.phase==="dealEnd" || g.phase==="matchEnd"){
+    if (g.phase==="dealEnd" && S.dismissed===g.deal) return `<div class="floatbtn"><button class="btn" data-ga="next">Deal ${g.deal+1}</button></div>`;
+    const ord = ids(3).sort((a,b)=>g.score[b]-g.score[a]);
+    const res = ids(3).map(i=>`<tr><td>${esc(g.players[i].name)}${i===V.me?" (you)":""}</td><td>${g.lastRes.tricks[i]} / ${g.quota[i]}</td><td>${g.score[i]}</td></tr>`).join("");
+    const tbl = `<div class="tablewrap"><table><thead><tr><th>Player</th><th>Tricks / quota</th><th>Total</th></tr></thead><tbody>${res}</tbody></table></div>`;
+    if (g.phase==="matchEnd") return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">After 3 deals</div><h2>${esc(g.players[ord[0]].name)} wins with ${g.score[ord[0]]}</h2></div>${tbl}<button class="btn" data-ga="newmatch">Play again</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+    return `<div class="veil"><div class="sheet"><h2>Deal ${g.deal} over</h2>${tbl}<div class="note">Players over quota pull cards from players under quota in the next deal.</div><button class="btn" data-ga="next">Deal ${g.deal+1}</button><button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  return "";
+}
+function tdScores(V){ const g = V.g; return simpleScores(V,["Player","Score","Quota now"], ids(3).sort((a,b)=>g.score[b]-g.score[a]).map((i,k)=>({lead:k===0,cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.score[i], g.quota[i]]}))); }
+GAMES.teendo = { newGame:(pl)=>tdNew(pl,1,1,rand(3),[0,0,0],null), act:tdAct, auto:tdAuto, view:tdView, render:tdRender, overlay:tdOverlay, scores:tdScores };
+
+/* ================= Dehla Pakad ================= */
+const dv = c => { const r = rk(c); return r===1 ? 14 : r; };
+function dehlaNew(players, v, hand, dealer, score, kots, target){
+  const deck = shuffle(ids(52)), lead = (dealer+1)%4;
+  const g = { kind:"dehla", v, phase:"play", players, hand, dealer, trump:-1, hands:ids(4).map(p=>sortHand(deck.slice(p*13,p*13+13))), turn:lead, lead,
+    trick:[], pile:[], lastWinner:-1, tens:[0,0], cards:[0,0], resolving:false, trickWinner:-1, auto:false, score, kots, target, log:[], result:null, trickNo:0 };
+  addLog(g, `Hand ${hand}: ${players[dealer].name} dealt. ${players[lead].name} leads. The first player who cannot follow suit sets the trump`);
+  return g;
+}
+function dehlaAct(G, i, m){
+  const g = clone(G);
+  if (m.a === "play" && g.phase==="play" && !g.resolving && g.turn===i){
+    const h = g.hands[i], k = h.indexOf(m.card);
+    if (k<0 || !legalCourt(h, g.trick, m.card)) return null;
+    if (g.trick.length && g.trump<0 && st(m.card)!==st(g.trick[0].c)){ g.trump = st(m.card); addLog(g, `${g.players[i].name} could not follow. ${SUITS[g.trump]} is the trump`); }
+    h.splice(k,1); g.trick.push({p:i, c:m.card}); g.v++;
+    if (g.trick.length===4){ g.resolving = true; g.auto = true; g.trickWinner = trickWinner(g.trick, g.trump); }
+    else g.turn = (i+1)%4;
+    return g;
+  }
+  if (m.a === "next" && g.phase==="handEnd"){
+    const d = g.result.nextDealer; return dehlaNew(g.players, g.v+1, g.hand+1, d, g.score, g.kots, g.target);
+  }
+  if (m.a === "newmatch" && g.phase==="matchEnd") return dehlaNew(g.players, g.v+1, 1, 0, [0,0], [0,0], g.target);
+  return null;
+}
+function dehlaAuto(G){
+  const g = clone(G); g.auto = false;
+  if (!g.resolving) return g;
+  const w = g.trickWinner, team = w%2;
+  g.pile = g.pile.concat(g.trick.map(t=>t.c)); g.trick = []; g.resolving = false; g.trickWinner = -1; g.trickNo++; g.v++;
+  const last = g.hands.every(h=>h.length===0);
+  if (g.lastWinner === w || last){
+    g.tens[team] += g.pile.filter(c=>rk(c)===10).length; g.cards[team] += g.pile.length;
+    addLog(g, `${g.players[w].name} collected ${g.pile.length} cards for Team ${tn(team)}`);
+    g.pile = []; g.lastWinner = -1;
+  } else g.lastWinner = w;
+  if (!last){ g.turn = w; g.lead = w; return g; }
+  // hand over
+  const t = g.tens; let winner = -1;
+  if (t[0] !== t[1]) winner = t[0] > t[1] ? 0 : 1; else if (g.cards[0] !== g.cards[1]) winner = g.cards[0] > g.cards[1] ? 0 : 1;
+  const kot = winner >= 0 && t[winner] === 4;
+  const dTeam = g.dealer % 2;
+  let nextDealer = g.dealer;
+  if (winner >= 0){ if (winner !== dTeam && !kot) nextDealer = g.dealer; else if (kot && winner !== dTeam) nextDealer = (g.dealer+2)%4; else nextDealer = (g.dealer+1)%4; }
+  g.score = g.score.slice(); g.kots = g.kots.slice();
+  if (winner >= 0){ g.score[winner] += kot ? 3 : 1; if (kot) g.kots[winner]++; }
+  g.result = {winner, kot, tens:t.slice(), cards:g.cards.slice(), nextDealer};
+  g.phase = winner >= 0 && g.score[winner] >= g.target ? "matchEnd" : "handEnd";
+  addLog(g, winner<0 ? "Hand drawn. Nobody scores" : `Team ${tn(winner)} won the hand${kot?" with a Kot":""}`);
+  return g;
+}
+function dehlaView(g, i){
+  return { kind:"dehla", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), hand:g.hand, dealer:g.dealer, trump:g.trump, turn:g.turn, trick:g.trick,
+    pileCount:g.pile.length, tens:g.tens, cards:g.cards, resolving:g.resolving, trickWinner:g.trickWinner, score:g.score, kots:g.kots, target:g.target, log:g.log,
+    counts:g.hands.map(h=>h.length), myHand:g.hands[i], result:g.result, lastWinner:g.lastWinner };
+}
+function dehlaRender(V){
+  const g = V.g, me = V.me, myTeam = me%2, hints = CFG.hints;
+  const myTurn = g.phase==="play" && !g.resolving && g.turn===me;
+  const legalSet = new Set(g.myHand.filter(c=>legalCourt(g.myHand, g.trick, c)));
+  if (S.selected!=null && !(myTurn && (!hints || legalSet.has(g.myHand[S.selected])))) S.selected = null;
+  const area = ["3 / 2","2 / 1","1 / 2","2 / 3"];
+  const slots = ids(4).map(rel=>{ const p = (me+rel)%4, tc = g.trick.find(x=>x.p===p);
+    return `<div class="tslot ${g.phase==="play"&&!g.resolving&&g.turn===p?"turn":""} ${g.resolving&&g.trickWinner===p?"win":""}" style="grid-area:${area[rel]}"><span class="nm">${esc(g.players[p].name)}${p===me?" (you)":p===(me+2)%4?" · partner":""}</span>${tc?cardHTML(tc.c,"mini","disabled"):`<div class="tempty"></div>`}<span class="cnt">${g.counts[p]} cards</span></div>`; }).join("");
+  const trumpTxt = g.trump>=0 ? `<b style="color:${RED[g.trump]?"#ffaaa4":"#fff"}">${SUITS[g.trump]}</b>` : "<b>?</b>";
+  let banner = g.phase==="play" ? (g.resolving ? `${esc(g.players[g.trickWinner].name)} wins the trick` : myTurn ? (g.trick.length ? "Your turn. Follow suit if you can" : "Your turn. Lead any card") : `Waiting for ${esc(g.players[g.turn].name)}`) : "Hand over";
+  const tiles = g.myHand.map((c,k)=>cardHTML(c,(myTurn&&hints?(legalSet.has(c)?"ok":"dim"):"")+(S.selected===k?" sel":""),`data-gi="${k}"`)).join("");
+  const play = myTurn ? `<div class="actions"><button class="btn" data-ga="play" data-sel="1" ${S.selected==null?"disabled":""}>${S.selected==null?"Select a card":"Play "+lab(g.myHand[S.selected])}</button></div>` : "";
+  const body = `<div class="cscore"><div class="team me"><small>Your team</small><b>${g.score[myTeam]}</b><span class="nm">${teamNames(g,myTeam)}</span></div><div class="vs">First to<br>${g.target}</div><div class="team"><small>Opponents</small><b>${g.score[1-myTeam]}</b><span class="nm">${teamNames(g,1-myTeam)}</span></div></div>
+    <div class="chipsrow"><span class="chip">Tens collected: us <b>${g.tens[myTeam]}</b> · them <b>${g.tens[1-myTeam]}</b></span><span class="chip">Centre pile: ${g.pileCount} cards</span></div>
+    <div class="banner ${myTurn?"me":""}">${banner}</div>
+    <div class="ttable">${slots}<div class="tcenter">Trump${trumpTxt}</div></div>`;
+  return shell(V,"Dehla Pakad",`<span class="chip">Hand <b>${g.hand}</b></span>`, body, `${play}<div class="hand" style="--cw:${fitCW(g.myHand.length)}px">${tiles}</div>`);
+}
+function dehlaOverlay(V){
+  const g = V.g, r = g.result;
+  if (g.phase==="matchEnd"){ const w = r.winner; return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">Match over</div><h2>${teamNames(g,w)} win</h2><div>Team ${tn(w)} · ${g.score[w]} points · ${g.kots[w]} Kot${g.kots[w]===1?"":"s"}</div></div><button class="btn" data-ga="newmatch">Play a new match</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`; }
+  if (g.phase==="handEnd"){
+    if (S.dismissed===g.hand) return `<div class="floatbtn"><button class="btn" data-ga="next">Deal hand ${g.hand+1}</button></div>`;
+    return `<div class="veil"><div class="sheet"><h2>${r.winner<0?"Hand drawn":`${teamNames(g,r.winner)} won hand ${g.hand}${r.kot?" with a Kot":""}`}</h2>
+      <div class="note">Tens: Team A ${r.tens[0]}, Team B ${r.tens[1]}. Cards collected: A ${r.cards[0]}, B ${r.cards[1]}.</div>
+      <div class="note">Score: Team A ${g.score[0]}, Team B ${g.score[1]}. First to ${g.target}.</div>
+      <button class="btn" data-ga="next">Deal hand ${g.hand+1}</button><button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  return "";
+}
+function dehlaScores(V){ const g = V.g; return simpleScores(V,["Team","Players","Points","Kots"],[0,1].map(t=>({lead:g.score[t]>g.score[1-t],cells:[`Team ${tn(t)}`,teamNames(g,t),g.score[t],g.kots[t]]}))); }
+GAMES.dehla = { newGame:(pl,o)=>dehlaNew(pl,1,1,0,[0,0],[0,0],o.target||7), act:dehlaAct, auto:dehlaAuto, view:dehlaView, render:dehlaRender, overlay:dehlaOverlay, scores:dehlaScores };
+
+/* ================= Rummy (13 cards, Indian rules) ================= */
+const RUM = {DEALS:3, MAXPTS:80};
+const isPJ = c => c >= 104;
+function rface(c){ return c % 52; }
+function rIsWild(c, wild){ return isPJ(c) || (wild > 0 && rk(rface(c)) === wild); }
+function rVal(c){ if (isPJ(c)) return 0; const r = rk(rface(c)); return r>=10 || r===1 ? 10 : r; }
+// is this group (array of card ids) a sequence / a set? mode: "pure" needs no jokers
+function rSeqOk(cards, wild, pure){
+  const n = cards.length; if (n < 3 || n > 14) return false;
+  const wl = cards.filter(c=>!isPJ(c) && wild>0 && rk(rface(c))===wild);
+  const pj = cards.filter(isPJ).length;
+  if (pure && pj) return false;
+  const tryAssign = (mask)=>{
+    const nat = [], jk = pj + (pure ? 0 : wl.length - popc(mask));
+    if (pure){ cards.forEach(c=>nat.push(c)); } else {
+      cards.forEach(c=>{ if (isPJ(c)) return; const isw = wild>0 && rk(rface(c))===wild; if (!isw) nat.push(c); });
+      let k = 0; wl.forEach((c,idx)=>{ if (mask & (1<<idx)) nat.push(c); });
+    }
+    if (!nat.length) return true;
+    const suit = st(rface(nat[0])); if (nat.some(c=>st(rface(c))!==suit)) return false;
+    for (const hi of [false,true]){
+      const rs = nat.map(c=>{ const r = rk(rface(c)); return r===1 && hi ? 14 : r; }).sort((a,b)=>a-b);
+      if (new Set(rs).size !== rs.length) continue;
+      const span = rs[rs.length-1]-rs[0]+1;
+      if (span <= n) return true;
+    }
+    return false;
+  };
+  if (pure) return tryAssign(0);
+  for (let m=0; m < (1<<wl.length); m++) if (tryAssign(m)) return true;
+  return false;
+}
+function popc(x){ let c=0; while(x){ c += x&1; x >>= 1; } return c; }
+function rSetOk(cards, wild){
+  const n = cards.length; if (n < 3 || n > 4) return false;
+  const nat = cards.filter(c=>!rIsWild(c, wild));
+  const wl = cards.filter(c=>!isPJ(c) && wild>0 && rk(rface(c))===wild);
+  // wild-rank cards may also stand in naturally; try both ways
+  for (let m=0; m < (1<<wl.length); m++){
+    const nn = nat.concat(wl.filter((c,idx)=>m&(1<<idx)));
+    if (!nn.length) return true;
+    const r0 = rk(rface(nn[0])); if (nn.some(c=>rk(rface(c))!==r0)) continue;
+    const ss = nn.map(c=>st(rface(c))); if (new Set(ss).size === ss.length) return true;
+  }
+  return false;
+}
+const _rc = new Map();
+function rAnalyse(hand, wild){
+  const ck = hand.join(",")+"|"+wild; if (_rc.has(ck)) return _rc.get(ck);
+  const r = rAnalyse0(hand, wild); if (_rc.size > 300) _rc.clear(); _rc.set(ck, r); return r;
+}
+function rAnalyse0(hand, wild){
+  const n = hand.length, total = hand.reduce((a,c)=>a+rVal(c),0);
+  const groups = [];   // {mask, val, pure, seq}
+  for (let m=7; m < (1<<n); m++){
+    const k = popc(m); if (k < 3) continue;
+    const cs = []; let val = 0; for (let b=0;b<n;b++) if (m&(1<<b)){ cs.push(hand[b]); val += rVal(hand[b]); }
+    const pure = rSeqOk(cs, wild, true), seq = pure || rSeqOk(cs, wild, false);
+    if (pure || seq || rSetOk(cs, wild)) groups.push({mask:m, val, pure, seq, low:m & -m});
+  }
+  const byLow = {}; groups.forEach(g=>{ (byLow[g.low] = byLow[g.low] || []).push(g); });
+  const full = (1<<n) - 1;
+  // A: best total melded value with a pure sequence and at least two sequences
+  const memo = new Map();
+  const dfs = (rem, hp, sc)=>{
+    if (!rem) return (hp && sc>=2) ? 0 : -1e9;
+    const key = rem*8 + (hp?4:0) + sc; if (memo.has(key)) return memo.get(key);
+    const low = rem & -rem; let best = dfs(rem ^ low, hp, sc);
+    for (const g of (byLow[low]||[])){ if ((g.mask & rem) !== g.mask) continue;
+      const r = g.val + dfs(rem ^ g.mask, hp || g.pure, Math.min(2, sc + (g.seq?1:0))); if (r > best) best = r; }
+    memo.set(key, best); return best;
+  };
+  const A = dfs(full, false, 0);
+  // B: best value using pure sequences only
+  const memoB = new Map();
+  const dfsB = rem=>{
+    if (!rem) return 0; if (memoB.has(rem)) return memoB.get(rem);
+    const low = rem & -rem; let best = dfsB(rem ^ low);
+    for (const g of (byLow[low]||[])){ if (!g.pure || (g.mask & rem)!==g.mask) continue; best = Math.max(best, g.val + dfsB(rem ^ g.mask)); }
+    memoB.set(rem, best); return best;
+  };
+  const B = dfsB(full);
+  const anyPure = groups.some(g=>g.pure);
+    const points = anyPure ? Math.min(RUM.MAXPTS, total - Math.max(A, B)) : RUM.MAXPTS;
+  return { valid: n === 13 && A === total, points, hasPure:anyPure };
+}
+function rummyNew(players, v, deal, scores, dealer){
+  const n = players.length, deck = shuffle(ids(106));
+  const hands = players.map((_,i)=>deck.splice(0,13).sort(rcmp));
+  let wildCard; do { wildCard = deck.shift(); if (isPJ(wildCard)) deck.push(wildCard); } while (isPJ(wildCard));
+  const wild = rk(rface(wildCard)), top = deck.shift();
+  const first = (dealer+1)%n;
+  const g = { kind:"rummy", v, phase:"draw", players, deal, dealer, hands, stock:deck, discard:[top], wildCard, wild, turn:first, scores, pts:null, winner:-1, log:[] };
+  addLog(g, `Deal ${deal} of ${RUM.DEALS}: wild joker rank is ${RANKS[wild-1]}. ${players[first].name} starts`);
+  return g;
+}
+function rcmp(a,b){ const ja=isPJ(a), jb=isPJ(b); if (ja||jb) return (ja?1:0)-(jb?1:0); return st(rface(a))-st(rface(b)) || rk(rface(a))-rk(rface(b)); }
+function rRefill(g){ if (g.stock.length) return; const top = g.discard.pop(); g.stock = shuffle(g.discard); g.discard = [top]; }
+function rummyAct(G, i, m){
+  const g = clone(G), n = g.players.length, nm = g.players[i].name;
+  if (g.phase==="draw" && g.turn===i && m.a==="draw"){
+    let c;
+    if (m.src === "discard"){ if (!g.discard.length) return null; c = g.discard.pop(); addLog(g, `${nm} took ${isPJ(c)?"the joker":lab(rface(c))} from the discard pile`); }
+    else { rRefill(g); c = g.stock.shift(); if (c === undefined) return null; addLog(g, `${nm} drew from the stock`); }
+    g.hands[i] = g.hands[i].concat([c]).sort(rcmp); g.phase = "discard"; g.v++; g.lastDrawn = c; return g;
+  }
+  if (g.phase==="discard" && g.turn===i && (m.a==="discard" || m.a==="declare")){
+    const h = g.hands[i]; if (!Number.isInteger(m.k) || m.k<0 || m.k>=h.length) return null;
+    const c = h.splice(m.k,1)[0];
+    if (m.a === "declare"){
+      const an = rAnalyse(h, g.wild);
+      if (!an.valid){ return {invalid:true}; }
+      g.pts = g.hands.map((hh,j)=> j===i ? 0 : rAnalyse2(hh, g.wild)); g.winner = i; g.discard.push(c);
+      g.scores = g.scores.map((s,j)=>s+g.pts[j]);
+      g.phase = g.deal >= RUM.DEALS ? "matchEnd" : "dealEnd"; g.v++;
+      addLog(g, `${nm} declared with a valid hand`); return g;
+    }
+    g.discard.push(c); g.phase = "draw"; g.turn = (i+1)%n; g.v++;
+    addLog(g, `${nm} discarded ${isPJ(c)?"a joker":lab(rface(c))}`); return g;
+  }
+  if (m.a==="next" && g.phase==="dealEnd") return rummyNew(g.players, g.v+1, g.deal+1, g.scores, (g.dealer+1)%n);
+  if (m.a==="newmatch" && g.phase==="matchEnd") return rummyNew(g.players, g.v+1, 1, g.players.map(()=>0), 0);
+  return null;
+}
+function rAnalyse2(hand, wild){ return rAnalyse(hand, wild).points; }
+function rummyView(g, i){
+  const reveal = g.phase==="dealEnd" || g.phase==="matchEnd";
+  return { kind:"rummy", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), deal:g.deal, dealer:g.dealer, wildCard:g.wildCard, wild:g.wild, turn:g.turn,
+    stockCount:g.stock.length, top:g.discard[g.discard.length-1], discardCount:g.discard.length, counts:g.hands.map(h=>h.length), myHand:g.hands[i], scores:g.scores, pts:g.pts, winner:g.winner,
+    hands: reveal ? g.hands : null, log:g.log, lastDrawn: g.turn===i ? g.lastDrawn : undefined };
+}
+function rankName(c){ return isPJ(c) ? "Joker" : lab(rface(c)); }
+function rummyRender(V){
+  const g = V.g, me = V.me, n = g.players.length, myTurn = g.turn===me && (g.phase==="draw"||g.phase==="discard");
+  if (S.selected!=null && S.selected >= g.myHand.length) S.selected = null;
+  const an = g.myHand.length===13 ? rAnalyse(g.myHand, g.wild) : null;
+  const opps = ids(n-1).map(k=>(me+1+k)%n).map(i=>({name:g.players[i].name+(V.seats[i]&&!V.seats[i].online?" (offline)":""), sub:`${g.counts[i]} cards · ${g.scores[i]} pts`, turn:g.turn===i&&(g.phase==="draw"||g.phase==="discard")}));
+  const topTile = g.top!=null ? tileHTML(g.top,"mini","x","disabled") : `<div class="tempty"></div>`;
+  const piles = `<div class="rpiles"><div><small>Stock (${g.stockCount})</small>${backTile("mini")}</div><div><small>Discard</small>${topTile}</div><div><small>Wild joker</small>${tileHTML(g.wildCard,"mini","w","disabled")}<small>${RANKS[g.wild-1]}s are jokers</small></div></div>`;
+  let banner = g.phase==="draw" ? (myTurn ? "Your turn. Draw a card" : `Waiting for ${esc(g.players[g.turn].name)}`) : g.phase==="discard" ? (myTurn ? "Discard a card, or declare" : `${esc(g.players[g.turn].name)} is choosing a discard`) : "Deal over";
+  const wildTop = c => rIsWild(c, g.wild);
+  const tiles = g.myHand.map((c,k)=>tileHTML(c,(wildTop(c)?"wildmark ":"")+(S.selected===k?"sel":""),k)).join("");
+  const dock = (myTurn && g.phase==="draw" ? `<div class="actions"><button class="btn" data-ga="draw" data-src="stock">Draw from stock</button><button class="btn gold" data-ga="draw" data-src="discard" ${g.top==null?"disabled":""}>Take ${g.top!=null?rankName(g.top):""}</button></div>`
+     : myTurn ? `<div class="actions"><button class="btn" data-ga="discard" data-sel="1" ${S.selected==null?"disabled":""}>Discard</button><button class="btn gold" data-ga="declare" data-sel="1" ${S.selected==null?"disabled":""}>Declare</button></div>` : "")
+     + `<div class="hand" style="--cw:${fitCW(g.myHand.length)}px">${tiles}</div>` + (an ? `<div class="note" style="text-align:center">${an.valid?"Ready: you have a valid set of 13":an.hasPure?`If you declared now you would hold ${an.points} points`:"You still need a pure sequence (no jokers)"}</div>` : "");
+  const body = `${strip(opps)}${piles}<div class="banner ${myTurn?"me":""}">${banner}</div>`;
+  return shell(V,"Rummy",`<span class="chip">Deal <b>${g.deal}</b> of ${RUM.DEALS}</span><span class="chip">My total <b>${g.scores[me]}</b></span>`, body, dock);
+}
+function rummyOverlay(V){
+  const g = V.g;
+  if (g.phase==="dealEnd" || g.phase==="matchEnd"){
+    if (g.phase==="dealEnd" && S.dismissed===g.deal) return `<div class="floatbtn"><button class="btn" data-ga="next">Deal ${g.deal+1}</button></div>`;
+    const order = ids(g.players.length).sort((a,b)=>g.scores[a]-g.scores[b]);
+    const rows = order.map((i,k)=>({lead:k===0 && g.phase==="matchEnd", cells:[esc(g.players[i].name)+(i===V.me?" (you)":"")+(i===g.winner?" ★":""), g.pts[i], g.scores[i]]}));
+    const t = simpleScores(V,["Player","This deal","Total"],rows);
+    if (g.phase==="matchEnd") return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">After ${RUM.DEALS} deals · lowest total wins</div><h2>${esc(g.players[order[0]].name)} wins</h2></div>${t}<button class="btn" data-ga="newmatch">Play a new match</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+    return `<div class="veil"><div class="sheet"><h2>${esc(g.players[g.winner].name)} declared</h2>${t}<button class="btn" data-ga="next">Deal ${g.deal+1}</button><button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  return "";
+}
+function rummyScores(V){ const g = V.g; return simpleScores(V,["Player","Total"], ids(g.players.length).sort((a,b)=>g.scores[a]-g.scores[b]).map((i,k)=>({lead:k===0&&g.deal>1,cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.scores[i]]}))); }
+GAMES.rummy = { newGame:(pl)=>rummyNew(pl,1,1,pl.map(()=>0),0), act:rummyAct, view:rummyView, render:rummyRender, overlay:rummyOverlay, scores:rummyScores };
+
+/* ================= Colour Rush (Uno-style) ================= */
+const UCOL = ["Red","Yellow","Green","Blue"], UTARGET = 150;
+const ucol = id => Math.floor(id/16), uval = id => id%16;
+function uLabel(id){ const v = uval(id); return v<=9 ? String(v) : ({10:"⊘",11:"⇄",12:"+2",13:"W",14:"+4"})[v]; }
+function uPoints(id){ const v = uval(id); return v<=9 ? v : v<=12 ? 20 : 50; }
+function uDeck(){ const d = []; for (let c=0;c<4;c++){ d.push(c*16); for (let v=1;v<=12;v++){ d.push(c*16+v, c*16+v); } } for (let k=0;k<4;k++){ d.push(4*16+13, 4*16+14); } return d; }
+function uRefill(g){ if (g.draw.length) return; const top = g.disc.pop(); g.draw = shuffle(g.disc); g.disc = [top]; }
+function uDrawN(g, p, k){ for (let j=0;j<k;j++){ uRefill(g); if (g.draw.length) g.hands[p].push(g.draw.shift()); } g.hands[p].sort((a,b)=>a-b); }
+function uNew(players, v, round, scores, dealer){
+  const n = players.length, deck = shuffle(uDeck()), hands = players.map(()=>deck.splice(0,7).sort((a,b)=>a-b));
+  let top; do { top = deck.shift(); if (ucol(top)===4){ deck.push(top); top = null; } else if (uval(top)>9){ deck.push(top); top = null; } } while (top==null);
+  const g = { kind:"uno", v, phase:"play", players, round, hands, draw:deck, disc:[top], color:ucol(top), dir:1, turn:(dealer+1)%n, dealer, scores, drawn:-1, uno:players.map(()=>false), winner:-1, pts:0, log:[] };
+  addLog(g, `Round ${round}: ${players[g.turn].name} goes first`);
+  return g;
+}
+function uPlayable(g, p, id){
+  const top = g.disc[g.disc.length-1];
+  if (ucol(id)===4) return uval(id)===13 || !g.hands[p].some(x=>ucol(x)===g.color);
+  return ucol(id)===g.color || uval(id)===uval(top);
+}
+function uNext(g, from, skip){ const n = g.players.length; let t = from; for (let k=0;k<=(skip?1:0);k++) t = (t + g.dir + n) % n; return t; }
+function unoAct(G, i, m){
+  const g = clone(G), n = g.players.length, nm = g.players[i].name;
+  if (g.phase==="play" && m.a==="uno" && g.hands[i].length<=2){ g.uno[i] = true; g.v++; addLog(g, `${nm} calls UNO!`); return g; }
+  if (g.phase==="play" && g.turn===i && m.a==="draw" && g.drawn<0){
+    uRefill(g); if (!g.draw.length) return null;
+    const c = g.draw.shift(); g.hands[i].push(c); g.hands[i].sort((x,y)=>x-y); g.v++;
+    addLog(g, `${nm} drew a card`);
+    if (uPlayable(g, i, c)){ g.drawn = 1; g.drawnId = c; } else { g.drawn = -1; g.turn = uNext(g, i, false); }
+    return g;
+  }
+  if (g.phase==="play" && g.turn===i && m.a==="keep" && g.drawn>=0){ g.drawn = -1; g.turn = uNext(g, i, false); g.v++; addLog(g, `${nm} kept the card`); return g; }
+  if (g.phase==="play" && g.turn===i && m.a==="play"){
+    const h = g.hands[i]; if (!Number.isInteger(m.k) || m.k<0 || m.k>=h.length) return null;
+    const id = h[m.k]; if (!uPlayable(g, i, id)) return null;
+    if (g.drawn>=0 && id!==g.drawnId) return null;
+    if (ucol(id)===4 && !(m.col>=0 && m.col<4)) return null;
+    h.splice(m.k,1); g.disc.push(id); g.color = ucol(id)===4 ? m.col : ucol(id); g.drawn = -1; g.drawnId = -1; g.v++;
+    const wasTwo = h.length===1;
+    if (wasTwo && !g.uno[i]){ uDrawN(g, i, 2); addLog(g, `${nm} forgot to call UNO and draws 2`); }
+    g.uno[i] = false;
+    addLog(g, `${nm} played ${ucol(id)===4?"":UCOL[ucol(id)]+" "}${uLabel(id)}${ucol(id)===4?" and chose "+UCOL[g.color]:""}`);
+    const v = uval(id);
+    let skip = false, victim = -1, take = 0;
+    if (v===10) skip = true;
+    else if (v===11){ if (n===2) skip = true; else g.dir *= -1; }
+    else if (v===12){ victim = uNext(g, i, false); take = 2; skip = true; }
+    else if (v===14){ victim = uNext(g, i, false); take = 4; skip = true; }
+    if (victim>=0){ uDrawN(g, victim, take); addLog(g, `${g.players[victim].name} draws ${take}`); }
+    if (g.hands[i].length===0){
+      g.pts = g.hands.reduce((a,hh)=>a+hh.reduce((b,c)=>b+uPoints(c),0),0); g.winner = i; g.scores = g.scores.slice(); g.scores[i] += g.pts;
+      g.phase = g.scores[i] >= UTARGET ? "matchEnd" : "roundEnd"; addLog(g, `${nm} won the round and scores ${g.pts}`); return g;
+    }
+    g.turn = uNext(g, i, skip); return g;
+  }
+  if (g.phase==="roundEnd" && m.a==="next") return uNew(g.players, g.v+1, g.round+1, g.scores, (g.dealer+1)%n);
+  if (g.phase==="matchEnd" && m.a==="newmatch") return uNew(g.players, g.v+1, 1, g.players.map(()=>0), 0);
+  return null;
+}
+function uView(g, i){
+  const reveal = g.phase!=="play";
+  return { kind:"uno", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), round:g.round, dir:g.dir, turn:g.turn, color:g.color, top:g.disc[g.disc.length-1], drawCount:g.draw.length,
+    counts:g.hands.map(h=>h.length), myHand:g.hands[i], scores:g.scores, drawn:g.turn===i?g.drawn:-1, drawnId:g.turn===i?g.drawnId:-1, uno:g.uno, winner:g.winner, pts:g.pts, log:g.log };
+}
+function unoTile(id, cls, k, attrs){ const c = ucol(id); return `<button class="pc uno u${c} ${cls||""}" ${k!=null?`data-gi="${k}"`:""} ${attrs||""} aria-label="${c===4?"Wild":UCOL[c]} ${uLabel(id)}"><span class="tl">${uLabel(id)}</span><span class="mid">${uLabel(id)}</span><span class="br">${uLabel(id)}</span></button>`; }
+function unoRender(V){
+  const g = V.g, me = V.me, n = g.players.length, myTurn = g.phase==="play" && g.turn===me, hints = CFG.hints;
+  const topG = {hands:[g.myHand], color:g.color, disc:[g.top]};
+  const okc = id => { const t = g.top; if (ucol(id)===4) return uval(id)===13 || !g.myHand.some(x=>ucol(x)===g.color); return ucol(id)===g.color || uval(id)===uval(t); };
+  if (S.selected!=null && (S.selected>=g.myHand.length)) S.selected = null;
+  const opps = ids(n-1).map(k=>(me+1+k)%n).map(i=>({name:g.players[i].name+(V.seats[i]&&!V.seats[i].online?" (offline)":""), sub:`${g.counts[i]} card${g.counts[i]===1?"":"s"} · ${g.scores[i]} pts`+(g.counts[i]===1?" · UNO!":""), turn:g.turn===i&&g.phase==="play"}));
+  const hasDrawn = myTurn && g.drawn>=0;
+  const okd = c => hasDrawn ? c===g.drawnId : okc(c);
+  const tiles = g.myHand.map((c,k)=>unoTile(c,(myTurn&&hints?(okd(c)?"ok":"dim"):"")+(S.selected===k?" sel":""),k)).join("");
+  const sel = S.selected!=null ? g.myHand[S.selected] : null;
+  const colorRow = sel!=null && ucol(sel)===4 ? `<div class="suitpick">${UCOL.map((c,k)=>`<button data-ga="play" data-col="${k}" data-sel="1" class="uc u${k}" aria-label="${c}">${c[0]}</button>`).join("")}</div>` : "";
+  const dock = (myTurn ? `<div class="actions wrap">${sel!=null && ucol(sel)!==4 ? `<button class="btn" data-ga="play" data-sel="1">Play</button>` : ""}${!hasDrawn ? `<button class="btn gold" data-ga="draw">Draw a card</button>` : `<button class="btn ghost" data-ga="keep">Keep it, pass</button>`}${g.myHand.length<=2?`<button class="btn ghost" data-ga="uno">UNO!</button>`:""}</div>${colorRow}` : (g.myHand.length<=2&&g.phase==="play"?`<div class="actions"><button class="btn ghost" data-ga="uno">UNO!</button></div>`:""))
+    + `<div class="hand" style="--cw:${fitCW(g.myHand.length)}px">${tiles}</div>`;
+  const banner = g.phase!=="play" ? "Round over" : myTurn ? (hasDrawn ? "You drew a card. Play it or keep it" : "Your turn") : `Waiting for ${esc(g.players[g.turn].name)}`;
+  const body = `${strip(opps)}<div class="rpiles"><div><small>Draw pile (${g.drawCount})</small>${backTile("mini")}</div><div><small>Top card</small>${unoTile(g.top,"mini",null,"disabled")}</div><div><small>Colour</small><span class="colorchip u${g.color}">${UCOL[g.color]}</span><small>${g.dir>0?"↻ clockwise":"↺ anticlockwise"}</small></div></div><div class="banner ${myTurn?"me":""}">${banner}</div>`;
+  return shell(V,"Colour Rush",`<span class="chip">Round <b>${g.round}</b></span><span class="chip">Me <b>${g.scores[me]}</b></span>`, body, dock);
+}
+function unoOverlay(V){
+  const g = V.g;
+  if (g.phase==="roundEnd" || g.phase==="matchEnd"){
+    if (g.phase==="roundEnd" && S.dismissed===g.round) return `<div class="floatbtn"><button class="btn" data-ga="next">Deal round ${g.round+1}</button></div>`;
+    const order = ids(g.players.length).sort((a,b)=>g.scores[b]-g.scores[a]);
+    const t = simpleScores(V,["Player","Total"],order.map((i,k)=>({lead:k===0,cells:[esc(g.players[i].name)+(i===V.me?" (you)":"")+(i===g.winner?" ★":""), g.scores[i]]})));
+    if (g.phase==="matchEnd") return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">First to ${UTARGET}</div><h2>${esc(g.players[g.winner].name)} wins the match</h2></div>${t}<button class="btn" data-ga="newmatch">Play a new match</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+    return `<div class="veil"><div class="sheet"><h2>${esc(g.players[g.winner].name)} won the round, +${g.pts}</h2>${t}<button class="btn" data-ga="next">Deal round ${g.round+1}</button><button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  return "";
+}
+function unoScores(V){ const g = V.g; return simpleScores(V,["Player","Total"], ids(g.players.length).sort((a,b)=>g.scores[b]-g.scores[a]).map((i,k)=>({lead:k===0&&g.round>1,cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.scores[i]]}))); }
+GAMES.uno = { newGame:(pl)=>uNew(pl,1,1,pl.map(()=>0),0), act:unoAct, view:uView, render:unoRender, overlay:unoOverlay, scores:unoScores };
+
+/* ================= Bluff (Cheat): 1 to 3 decks ================= */
+const bcmp = (a,b)=> rk(a)-rk(b) || st(a)-st(b);
+function bluffNew(players, v, round, wins, decks){
+  const n = players.length, deck = shuffle(ids(52*decks).map(x=>x%52)), hands = players.map(()=>[]);
+  deck.forEach((c,k)=>hands[k%n].push(c)); hands.forEach(h=>h.sort(bcmp));
+  const g = { kind:"bluff", v, phase:"play", players, round, decks, hands, pile:[], rankIdx:0, turn:(round-1)%n, lastPlay:null, reveal:null, wins, winner:-1, auto:false, autoMs:0, log:[] };
+  addLog(g, `Game ${round}: ${decks} deck${decks===1?"":"s"}, ${52*decks} cards. ${players[g.turn].name} starts by claiming Aces`);
+  return g;
+}
+function bluffAct(G, i, m){
+  const g = clone(G), n = g.players.length, nm = x=>g.players[x].name;
+  if (g.phase==="gameEnd" && m.a==="next") return bluffNew(g.players, g.v+1, g.round+1, g.wins, g.decks);
+  if (g.phase !== "play") return null;
+  const win = w=>{ g.winner = w; g.wins = g.wins.slice(); g.wins[w]++; g.phase = "gameEnd"; g.auto = false; g.v++; addLog(g, `${nm(w)} got rid of every card and wins game ${g.round}`); return g; };
+  if (m.a === "call"){
+    const lp = g.lastPlay; if (!lp || i === lp.by) return null;
+    const truth = lp.cards.every(c=>rk(c) === lp.rank), loser = truth ? i : lp.by;
+    g.reveal = { by:lp.by, caller:i, cards:lp.cards, rank:lp.rank, liar:!truth, loser, pileN:g.pile.length };
+    g.hands[loser] = g.hands[loser].concat(g.pile).sort(bcmp); g.pile = []; g.lastPlay = null; g.auto = false; g.v++;
+    addLog(g, `${nm(i)} called bluff on ${nm(lp.by)}. ${truth ? "It was true" : "It was a bluff"}, so ${nm(loser)} picks up ${g.reveal.pileN} cards`);
+    if (truth && g.hands[lp.by].length === 0) return win(lp.by);
+    g.turn = loser; return g;
+  }
+  if (m.a === "play" && g.turn === i){
+    const ks = Array.isArray(m.ks) ? Array.from(new Set(m.ks)) : [], h = g.hands[i];
+    if (ks.length < 1 || ks.length > 4 || ks.some(k=>!Number.isInteger(k) || k < 0 || k >= h.length)) return null;
+    if (g.lastPlay && g.hands[g.lastPlay.by].length === 0) return win(g.lastPlay.by);   // nobody called their last play
+    const cards = ks.map(k=>h[k]); g.hands[i] = h.filter((_,k)=>!ks.includes(k));
+    const rank = g.rankIdx % 13 + 1;
+    g.pile = g.pile.concat(cards); g.lastPlay = { by:i, cards, rank, n:cards.length }; g.reveal = null; g.rankIdx++; g.v++;
+    addLog(g, `${nm(i)} plays ${cards.length} card${cards.length===1?"":"s"} and says ${RANKS[rank-1]}`);
+    if (g.hands[i].length === 0){ g.auto = true; g.autoMs = 6000; addLog(g, `${nm(i)} has no cards left. Call bluff now or they win`); }
+    g.turn = (i+1) % n; return g;
+  }
+  return null;
+}
+function bluffAuto(G){
+  const g = clone(G); g.auto = false;
+  if (g.phase==="play" && g.lastPlay && g.hands[g.lastPlay.by].length === 0){
+    const w = g.lastPlay.by; g.winner = w; g.wins = g.wins.slice(); g.wins[w]++; g.phase = "gameEnd"; g.v++;
+    addLog(g, `${g.players[w].name} got rid of every card and wins game ${g.round}`);
+  }
+  return g;
+}
+function bluffView(g, i){
+  return { kind:"bluff", v:g.v, phase:g.phase, players:g.players.map(p=>({name:p.name})), round:g.round, decks:g.decks, counts:g.hands.map(h=>h.length), myHand:g.hands[i],
+    pileCount:g.pile.length, rank:g.rankIdx%13+1, turn:g.turn, lastPlay:g.lastPlay ? {by:g.lastPlay.by, n:g.lastPlay.n, rank:g.lastPlay.rank} : null,
+    reveal:g.reveal, wins:g.wins, winner:g.winner, log:g.log, windowOpen:!!(g.lastPlay && g.hands[g.lastPlay.by].length===0) };
+}
+function bluffRender(V){
+  const g = V.g, me = V.me, n = g.players.length, myTurn = g.phase==="play" && g.turn===me;
+  S.picks = (S.picks||[]).filter(k=>k < g.myHand.length); if (!myTurn) S.picks = [];
+  const opps = ids(n-1).map(k=>(me+1+k)%n).map(i=>({name:g.players[i].name+(V.seats[i]&&!V.seats[i].online?" (offline)":""), sub:`${g.counts[i]} cards · ${g.wins[i]} win${g.wins[i]===1?"":"s"}`, turn:g.phase==="play"&&g.turn===i}));
+  const R = RANKS[g.rank-1];
+  const lp = g.lastPlay ? `<b>${esc(g.players[g.lastPlay.by].name)}</b> played ${g.lastPlay.n} card${g.lastPlay.n===1?"":"s"} and says <b>${RANKS[g.lastPlay.rank-1]}</b>` : "No claim to challenge yet";
+  const rv = g.reveal ? `<div class="reveal"><div>${g.reveal.liar?"<b>Bluff!</b>":"<b>It was true.</b>"} ${esc(g.players[g.reveal.by].name)} had ${g.reveal.cards.map(c=>cardHTML(c,"mini","disabled")).join("")}</div><div class="note">${esc(g.players[g.reveal.loser].name)} picks up ${g.reveal.pileN} cards</div></div>` : "";
+  const body = `${strip(opps)}
+    <div class="rpiles"><div><small>Pile (${g.pileCount})</small>${g.pileCount?backTile("mini"):`<div class="tempty"></div>`}</div><div><small>Next claim</small><b class="bigrank">${R}</b></div></div>
+    <div class="banner ${myTurn?"me":""}">${g.phase!=="play" ? "Game over" : myTurn ? `Your turn. Play 1 to 4 cards and say “${R}”` : `Waiting for ${esc(g.players[g.turn].name)}`}</div>
+    <div class="note" style="text-align:center">${lp}${g.windowOpen?" · last card! call it now":""}</div>${rv}`;
+  const picks = S.picks;
+  const canCall = g.phase==="play" && g.lastPlay && g.lastPlay.by!==me;
+  const acts = `<div class="actions wrap">${myTurn ? `<button class="btn" data-ga="play" data-picks="1" ${picks.length?"":"disabled"}>${picks.length?`Play ${picks.length} as ${R}`:"Pick 1 to 4 cards"}</button>` : ""}${canCall ? `<button class="btn gold" data-ga="call">Call bluff!</button>` : ""}</div>`;
+  const tiles = g.myHand.map((c,k)=>cardHTML(c,(picks.includes(k)?"sel":""),`data-gi="${k}"`)).join("");
+  return shell(V,"Bluff",`<span class="chip">Game <b>${g.round}</b></span><span class="chip">Cards <b>${g.myHand.length}</b></span><span class="chip">${g.decks} deck${g.decks===1?"":"s"}</span>`, body, `${acts}<div class="hand" style="--cw:${fitCW(g.myHand.length)}px">${tiles}</div>`);
+}
+function bluffOverlay(V){
+  const g = V.g;
+  if (g.phase !== "gameEnd") return "";
+  if (S.dismissed===g.round) return `<div class="floatbtn"><button class="btn" data-ga="next">Play game ${g.round+1}</button></div>`;
+  const order = ids(g.players.length).sort((a,b)=>g.wins[b]-g.wins[a]);
+  return `<div class="veil"><div class="sheet"><div class="champ"><div class="note">Game ${g.round}</div><h2>${esc(g.players[g.winner].name)} wins</h2></div>${bluffScores(V)}<button class="btn" data-ga="next">Play game ${g.round+1}</button><button class="btn ghost" id="hide">Look at the table</button><button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+}
+function bluffScores(V){ const g = V.g; return simpleScores(V,["Player","Wins","Cards now"], ids(g.players.length).sort((a,b)=>g.wins[b]-g.wins[a]).map((i,k)=>({lead:k===0&&g.wins[i]>0,cells:[esc(g.players[i].name)+(i===V.me?" (you)":""), g.wins[i], g.counts[i]]}))); }
+GAMES.bluff = { newGame:(pl,o)=>bluffNew(pl,1,1,pl.map(()=>0),Math.min(3,Math.max(1,(o&&o.target)||2))), act:bluffAct, auto:bluffAuto, view:bluffView, render:bluffRender, overlay:bluffOverlay, scores:bluffScores };
+GAME_INFO.bluff = {name:"Bluff", min:2, max:8, teams:false, tag:"Play cards face down, claim a rank, and call out the liars. 1 to 3 decks."};
+RULES.bluff = `
+<h4>Players and decks</h4><p>2 to 8 players. The room creator picks how many 52-card decks to use (1, 2 or 3). More players or longer games work better with more decks: 1 deck for 2 to 4 players, 2 decks for 5 to 6, 3 decks for 7 to 8 is a good guide. All cards are dealt out, so hands start large.</p>
+<h4>Goal</h4><p>Be the first to get rid of all your cards.</p>
+<h4>Claims in rank order</h4><p>The claimed rank goes up by one every turn: Ace, 2, 3 ... Queen, King, then Ace again. The screen always shows the rank you must claim next.</p>
+<h4>Your turn</h4><ul><li>Pick 1 to 4 cards from your hand and play them face down into the pile. You are saying they are all of the claimed rank.</li><li>You may tell the truth or bluff. Nobody sees your cards.</li></ul>
+<h4>Calling a bluff</h4><ul><li>After someone plays, any other player may tap <b>Call bluff!</b>.</li><li>The cards are turned over. If every card was of the claimed rank, the claim was true and the <b>caller</b> picks up the whole pile.</li><li>If any card was not that rank, the <b>player who played</b> picks up the whole pile.</li><li>The player who picked up the pile plays next, and the claimed rank carries on counting up.</li></ul>
+<h4>Winning</h4><p>When a player plays their last cards, the others get a short window to call them. If nobody calls, or the call was wrong, that player wins the game. If the call was right they pick up the pile and play on. The scoreboard counts wins across games. Tip: with several decks a player may legitimately hold more than four of a rank, so calls are riskier.</p>`;
+
+
+/* ================= settings and storage ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ if (v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+const CFG = Object.assign({predict:true, hints:true, vibrate:true, sound:true, size:"M"},
+  (()=>{ try{ return JSON.parse(lsGet("bs_cfg")||"{}"); }catch(e){ return {}; } })());
+function applySize(){ document.documentElement.style.setProperty("--cw", ({S:56,M:72,L:92}[CFG.size]||72) + "px"); }
+function saveCfg(){ lsSet("bs_cfg", JSON.stringify(CFG)); applySize(); }
+applySize();
+function toast(msg){
+  $("#toast").innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(()=>{ $("#toast").innerHTML = ""; }, 3500);
+}
+function newCode(){
+  const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  return Array.from({length:5},()=>A[rand(A.length)]).join("");
+}
+function newToken(){ return Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>b.toString(16).padStart(2,"0")).join(""); }
+
+/* ================= networking: public message relay (MQTT over secure WebSocket) ================= */
+// Every message goes phone -> public relay server -> phone, so no phone has to reach another phone directly.
+// That avoids the same-WiFi and strict-router failures that direct connections have.
+const BROKERS = [
+  {c:"E", url:"wss://broker.emqx.io:8084/mqtt"},
+  {c:"H", url:"wss://broker.hivemq.com:8884/mqtt"},
+  {c:"M", url:"wss://test.mosquitto.org:8081"}
+];
+const TOPIC = "badamsat7x";
+const ALPHA = "ABCDFGJKLNPQRSTUVWXYZ23456789";
+const S = {
+  role:null, code:null, mq:null, token:null, name:"", max:4,
+  seats:[], G:null, penalty:0, seq:0, V:null, chat:[], unread:0, status:"",
+  setup:false, setupN:4, targetN:5, gameType:"badam", kind:"badam", target:5, resume:false, hostAlive:false,
+  snap:null, takeT:null, pw:"", key:null, rtt:null, lastPong:0, wasMyTurn:false, settingsOpen:false, logOpen:false,
+  selected:null, scoresOpen:false, dismissed:0, chatOpen:false, aliveTimer:null, helloTimer:null
+};
+const base = () => TOPIC + "/" + S.code;
+const brokerOf = code => BROKERS.find(b=>b.c===code[0]);
+function mqOpts(extra){
+  return Object.assign({clientId:"bs_"+newToken().slice(0,10), clean:true, reconnectPeriod:2000, connectTimeout:8000, keepalive:30, protocolVersion:4}, extra||{});
+}
+
+/* ================= secure link: end-to-end encryption + optional private relay ================= */
+const RELAY_URL_DEFAULT = "";   // e.g. "wss://tashghar-relay.yourname.workers.dev" once you deploy the relay
+const relayUrl = () => String(lsGet("bs_relay") || RELAY_URL_DEFAULT || "").trim();
+const _enc = new TextEncoder(), _dec = new TextDecoder();
+function b64e(u8){ let s = ""; for (let i=0;i<u8.length;i+=8192) s += String.fromCharCode.apply(null, u8.subarray(i,i+8192)); return btoa(s); }
+function b64d(str){ const s = atob(str), u = new Uint8Array(s.length); for (let i=0;i<s.length;i++) u[i] = s.charCodeAt(i); return u; }
+async function deriveKey(code, pw){
+  const baseKey = await crypto.subtle.importKey("raw", _enc.encode("tashghar|"+code+"|"+(pw||"")), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt:_enc.encode("tashghar-v1-"+code), iterations:80000, hash:"SHA-256"}, baseKey, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function seal(text, key){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, _enc.encode(text)));
+  const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12); return b64e(all);
+}
+async function unseal(str, key){
+  const all = b64d(str);
+  return _dec.decode(await crypto.subtle.decrypt({name:"AES-GCM", iv:all.subarray(0,12)}, key, all.subarray(12)));
+}
+// a tiny MQTT-shaped client for the private relay (see relay/worker.js)
+function relayConnect(url, code, will){
+  const ev = {}; let ws, closed = false, pinger;
+  const c = { connected:false, subs:[],
+    on(e,f){ (ev[e] = ev[e] || []).push(f); return c; },
+    removeAllListeners(){ for (const k in ev) delete ev[k]; },
+    subscribe(t){ (Array.isArray(t)?t:[t]).forEach(x=>{ if (!c.subs.includes(x)) c.subs.push(x); }); send({o:"sub", t:Array.isArray(t)?t:[t]}); },
+    publish(t, p, o, cb){ if (typeof o === "function"){ cb = o; o = null; } send({o:"pub", t, p:String(p), r:!!(o && o.retain)}); if (cb) cb(); },
+    end(){ closed = true; clearInterval(pinger); try{ ws.close(); }catch(e){} c.connected = false; } };
+  const emit = (e,...a)=>(ev[e]||[]).slice().forEach(f=>f(...a));
+  const send = m => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); };
+  const open = ()=>{
+    ws = new WebSocket(url.replace(/\/+$/,"") + "/ws?room=" + encodeURIComponent(code));
+    ws.onopen = ()=>{ c.connected = true; if (will) send({o:"will", t:will}); if (c.subs.length) send({o:"sub", t:c.subs}); clearInterval(pinger); pinger = setInterval(()=>send({o:"ping"}), 20000); emit("connect"); };
+    ws.onmessage = e => { try{ const m = JSON.parse(e.data); if (m.o === "msg") emit("message", m.t, {toString:()=>m.p, length:m.p.length}); }catch(x){} };
+    ws.onclose = ()=>{ clearInterval(pinger); const was = c.connected; c.connected = false; if (closed) return; if (was) emit("offline"); setTimeout(()=>{ if (!closed) open(); }, 2000); };
+    ws.onerror = ()=>{};
+  };
+  open(); return c;
+}
+// every payload is encrypted before it leaves the phone; the relay or broker only ever sees ciphertext
+function openLink(code, willTopic, key, onBadKey){
+  const ru = relayUrl();
+  const raw = ru ? relayConnect(ru, code, willTopic) : mqtt.connect(brokerOf(code).url, mqOpts(willTopic ? {will:{topic:willTopic, payload:"", retain:true, qos:0}} : {}));
+  let sendQ = Promise.resolve(), recvQ = Promise.resolve();
+  const L = {
+    raw,
+    get connected(){ return !!raw.connected; },
+    on(e, f){
+      if (e === "message"){
+        raw.on("message", (t, p)=>{
+          const str = p.toString();
+          recvQ = recvQ.then(async ()=>{
+            if (!str){ f(t, {toString:()=>"", length:0}); return; }
+            let txt; try{ txt = await unseal(str, key); }catch(x){ if (t.endsWith("/alive") && onBadKey) onBadKey(); return; }
+            f(t, {toString:()=>txt, length:txt.length});
+          }).catch(()=>{});
+        });
+      } else raw.on(e, f);
+      return L;
+    },
+    subscribe(t, o){ raw.subscribe(t, o); },
+    publish(t, str, o, cb){
+      if (typeof o === "function"){ cb = o; o = undefined; }
+      if (str === ""){ raw.publish(t, "", o, cb); return; }
+      sendQ = sendQ.then(async ()=>{ raw.publish(t, await seal(str, key), o, cb); }).catch(()=>{});
+    },
+    removeAllListeners(){ raw.removeAllListeners(); },
+    end(force){ raw.end(force); }
+  };
+  return L;
+}
+
+function killMq(){
+  try{ if (S.mq){ const m = S.mq; S.mq = null; m.removeAllListeners(); m.end(true); } }catch(e){}
+}
+function pub(topic, obj){ try{ if (S.mq && S.mq.connected) S.mq.publish(topic, JSON.stringify(obj), {qos:0}); }catch(e){} }
+const toSeat = (tok, obj) => pub(base()+"/g/"+tok, obj);
+const toHost = obj => pub(base()+"/h", Object.assign({tok:S.token}, obj));
+
+function myIdx(){ return S.seats.findIndex(s=>s.token===S.token); }
+function viewFor(i){
+  const g = S.G;
+  return {
+    code:S.code, me:i, penalty:S.penalty, seq:S.seq, max:S.max, kind:S.kind, target:S.target,
+    seats:S.seats.map(s=>({name:s.name,online:s.online,host:s.token===S.token,team:s.team})),
+    g: !g ? null : (S.kind==="court" ? courtView(g,i) : GAMES[S.kind] ? GAMES[S.kind].view(g,i) : { v:g.v, phase:g.phase, round:g.round, total:g.total, players:g.players.map(p=>({name:p.name})),
+      counts:g.hands.map(h=>h.length), myHand:g.hands[i], table:g.table, turn:g.turn, passes:g.passes,
+      rounds:g.rounds, penalty:g.penalty, decks:g.decks||1, fakes:g.fakes, notice:g.notice, log:g.log, last:g.last })
+  };
+}
+// everything another player needs to carry on running the table if the host disappears
+function snapshot(){
+  return { code:S.code, kind:S.kind, target:S.target, max:S.max, penalty:S.penalty, seq:S.seq, hostTok:S.token, t:Date.now(),
+    seats:S.seats.map(s=>({token:s.token,name:s.name,team:s.team,online:!!s.online})), G:S.G, chat:S.chat.filter(m=>m.kind==="text").slice(-20) };
+}
+const bufs = {};
+function onChunk(m, cb){
+  const b = bufs[m.id] || (bufs[m.id] = {n:m.n, parts:[], got:0});
+  b.parts[m.i] = m.d;
+  if (++b.got === b.n){ delete bufs[m.id]; try{ cb(JSON.parse(b.parts.join(""))); }catch(e){} }
+}
+// big messages (voice notes) go out in small pieces so game moves are never stuck behind them
+function sendBig(send, obj){
+  const str = JSON.stringify(obj), id = Math.random().toString(36).slice(2,9), size = 20000, n = Math.ceil(str.length/size);
+  let i = 0;
+  (function next(){ if (i >= n) return; send({t:"vc", id, i, n, d:str.slice(i*size,(i+1)*size)}); i++; setTimeout(next, 15); })();
+}
+function saveHost(){
+  if (S.role !== "host") return;
+  lsSet("bs_host", JSON.stringify(snapshot()));
+}
+function broadcast(){
+  S.seq++;
+  const snap = snapshot();
+  S.seats.forEach((s,i)=>{ if (s.token!==S.token) toSeat(s.token,{t:"view",v:viewFor(i),snap}); });
+  S.V = viewFor(myIdx()); saveHost(); render();
+}
+
+/* ---- keep the session when someone presses Back or reloads ---- */
+function enterRoomUI(){ try{ history.pushState({bs:1},""); }catch(e){} }
+window.addEventListener("popstate", ()=>{
+  if (S.role){ try{ history.pushState({bs:1},""); }catch(e){} toast("Use the Leave button to exit the room."); }
+});
+window.addEventListener("beforeunload", e=>{ if (S.role){ e.preventDefault(); e.returnValue = ""; } });
+
+/* ---- host ---- */
+function pickTeam(){
+  const a = S.seats.filter(x=>x.team===0).length, b = S.seats.filter(x=>x.team===1).length;
+  return (a <= b && a < 2) || b >= 2 ? 0 : 1;
+}
+function startHost(name, opt){
+  opt = opt || {};
+  const first = !S.role;
+  S.role = "host"; S.name = name; keepAwake();
+  if (first) enterRoomUI();
+  killMq(); clearTimeout(S.takeT); S.takeT = null;
+  if (opt.resume){
+    const r = opt.resume;
+    S.code = r.code; S.max = r.max; S.kind = r.kind || "badam"; S.target = r.target || 5; S.penalty = r.penalty; S.G = r.G;
+    S.seq = (r.seq || 0) + (opt.takeover ? 5 : 0); S.chat = r.chat || [];
+    S.seats = r.seats.map(s=>({token:s.token,name:s.name,team:s.team,host:s.token===S.token,online:s.token===S.token,last:0}));
+    if (!S.seats.some(s=>s.token===S.token)) S.seats.push({token:S.token,name,team:TEAMED(S.kind)?pickTeam():undefined,host:true,online:true,last:0});
+  } else {
+    const b = BROKERS[(opt.attempt||0) % BROKERS.length];
+    S.code = b.c + Array.from({length:4},()=>ALPHA[rand(ALPHA.length)]).join("");
+    S.kind = GAME_INFO[opt.kind] ? opt.kind : "badam"; S.target = opt.target || 5; { const gi = GAME_INFO[S.kind]; S.max = gi.min===gi.max ? gi.max : Math.min(gi.max, Math.max(gi.min, opt.max || 4)); } S.penalty = 0; S.G = null; S.seq = 0; S.chat = [];
+    S.seats = [{token:S.token,name,online:true,host:true,last:0,team:TEAMED(S.kind)?0:undefined}];
+  }
+  lsSet("bs_sess", JSON.stringify({role:"host", code:S.code, name, pw:S.pw||""}));
+  S.status = opt.resume ? "Reopening your room…" : "Connecting to the game service…"; S.V = null; render();
+  const myCode = S.code;
+  deriveKey(S.code, S.pw).then(key=>{
+  if (S.role !== "host" || S.code !== myCode) return;
+  S.key = key;
+  const mq = openLink(S.code, base()+"/alive", key, null);
+  S.mq = mq; let up = false, started = false, seen = false;
+  const probe = !!opt.resume && !opt.takeover;     // a returning host first checks nobody else has taken over
+  const alivePub = ()=>mq.publish(base()+"/alive", JSON.stringify({max:S.max, t:Date.now(), h:S.token, q:S.seq}), {qos:0, retain:true});
+  const begin = ()=>{
+    if (S.mq !== mq) return;
+    started = true; alivePub(); S.status = ""; S.V = viewFor(myIdx()); saveHost(); render();
+    if (S.G && S.G.resolving) schedResolve();
+    if (S.G && S.G.auto) schedAuto();
+  };
+  const giveUp = setTimeout(()=>{
+    if (up || S.mq !== mq || opt.resume) return;
+    if ((opt.attempt||0) + 1 < BROKERS.length) startHost(name, {max:S.max, kind:S.kind, target:S.target, attempt:(opt.attempt||0)+1});
+    else { S.status = "Could not reach a game service. Check your internet, turn off VPN, or try mobile data."; render(); }
+  }, 9000);
+  mq.on("connect", ()=>{
+    mq.subscribe([base()+"/h", base()+"/alive"], {qos:0});
+    if (started){ clearTimeout(S.reclaimT); S.reclaimT = setTimeout(()=>{ if (S.mq===mq && S.role==="host") alivePub(); }, 1500); return; }   // wait: another player may already have taken over
+    if (up) return;
+    up = true; clearTimeout(giveUp);
+    if (probe){
+      setTimeout(()=>{
+        if (S.mq !== mq) return;
+        if (seen){ const sv = JSON.parse(lsGet("bs_host")||"null"); killMq(); S.G = null; S.seats = []; S.snap = sv; startGuest(name, sv ? sv.code : S.code, true); }
+        else begin();
+      }, 2500);
+    } else begin();
+  });
+  mq.on("message", (t, p)=>{
+    if (S.mq !== mq) return;
+    if (t.endsWith("/alive")){
+      if (!p.length) return;
+      if (!started){ seen = true; return; }
+      let a = null; try{ a = JSON.parse(p.toString()); }catch(e){}
+      if (a && a.h && a.h !== S.token){
+        if ((a.q||0) > S.seq || ((a.q||0) === S.seq && a.h > S.token)){      // someone else is running the table now: become a guest again
+          clearTimeout(S.reclaimT); const sv = snapshot(); try{ S.mq.raw.end(false); }catch(e){} killMq(); S.G = null; S.seats = []; S.snap = sv; startGuest(name, sv.code, true); toast("Another player took over as host. You are back in the game.");
+        } else alivePub();
+      }
+      return;
+    }
+    try{ hostGot(JSON.parse(p.toString())); }catch(e){}
+  });
+  mq.on("offline", ()=>{ if (S.mq===mq && started){ S.status = "Connection to the game service lost. Reconnecting…"; render(); } });
+  mq.on("error", ()=>{});
+  });
+}
+const seatOf = tok => S.seats.find(x=>x.token===tok);
+function hostGot(m){
+  if (!m || typeof m !== "object" || !m.tok) return;
+  const tok = String(m.tok).slice(0,40);
+  if (m.t === "vc"){ onChunk(m, o=>{ o.tok = tok; hostGot(o); }); return; }
+  if (m.t === "ping"){
+    const s0 = seatOf(tok);
+    if (s0){ s0.last = Date.now(); if (!s0.online){ s0.online = true; broadcast(); } }
+    toSeat(tok, {t:"pong", ts:m.ts, seq:S.seq}); return;
+  }
+  if (m.t === "bye"){ const sb = seatOf(tok); if (sb && sb.token!==S.token){ sb.online = false; broadcast(); } return; }
+  if (m.t === "sync"){ const i0 = S.seats.findIndex(x=>x.token===tok); if (i0 >= 0) toSeat(tok,{t:"view",v:viewFor(i0)}); return; }
+  if (m.t === "hello"){
+    const name = String(m.name||"Player").slice(0,14) || "Player";
+    let s = seatOf(tok);
+    if (!s && S.G){
+      // lost their device token: let them take back an offline seat by using the same name
+      s = S.seats.find(x=>x.token!==S.token && !x.online && x.name.toLowerCase()===name.toLowerCase());
+      if (s) s.token = tok;
+    }
+    if (s){ s.online = true; if (!S.G) s.name = name; }
+    else if (!S.G && S.seats.length < S.max){ s = {token:tok,name,online:true,last:0,team:TEAMED(S.kind)?pickTeam():undefined}; S.seats.push(s); }
+    else {
+      toSeat(tok,{t:"err", retry:!!S.G, msg:S.G ? "This game has already started. To rejoin, use the same name you played with." : "This room is full."});
+      return;
+    }
+    s.last = Date.now();
+    sendBig(o=>toSeat(s.token,o), {t:"history",chat:S.chat});
+    broadcast();
+    return;
+  }
+  const i = S.seats.findIndex(x=>x.token===tok);
+  if (i < 0) return;
+  S.seats[i].last = Date.now();
+  if (!S.seats[i].online){ S.seats[i].online = true; broadcast(); }
+  hostAct(i, m);
+}
+function bad(i, msg){ if (S.seats[i].token===S.token) toast(msg); else toSeat(S.seats[i].token,{t:"toast",msg}); }
+function hostAct(i, m){
+  const g = S.G, court = S.kind === "court";
+  switch (m.t){
+    case "team":
+      if (!g && TEAMED(S.kind) && (m.team===0 || m.team===1) && S.seats[i].team !== m.team){
+        if (S.seats.filter(x=>x.team===m.team).length >= 2) bad(i, "That team is full.");
+        else { S.seats[i].team = m.team; broadcast(); }
+      } break;
+    case "start":
+      if (g) break;
+      if (TEAMED(S.kind)){
+        const A = S.seats.filter(x=>x.team===0), B = S.seats.filter(x=>x.team===1);
+        if (S.seats.length!==4 || A.length!==2 || B.length!==2){ bad(i, "Court Piece needs two players on each team."); break; }
+        S.seats = [A[0],B[0],A[1],B[1]];       // partners sit opposite each other
+        const pl = S.seats.map(x=>({name:x.name}));
+        S.G = court ? courtNew(pl, S.target, 1) : GAMES[S.kind].newGame(pl, {target:S.target}); broadcast();
+      } else if (S.seats.length >= GAME_INFO[S.kind].min){
+        S.max = S.seats.length;
+        const pl = S.seats.map(x=>({name:x.name}));
+        S.G = GAMES[S.kind] ? GAMES[S.kind].newGame(pl, {target:S.target}) : dealGame(pl, 1, [], S.penalty, 1, [1,2,3].includes(S.target) ? S.target : 1); broadcast();
+      } break;
+    case "penalty":
+      if (!g && S.kind==="badam"){ S.penalty = m.v===5 ? 5 : 0; broadcast(); } break;
+    case "play": { const ng = g && S.kind==="badam" && applyPlay(g,i,m.card); if (ng){ S.G = ng; broadcast(); } else if (g && S.kind==="badam" && g.phase==="playing") bad(i, g.turn!==i ? "It is not your turn." : "That card cannot be played now."); break; }
+    case "pass": { const ng = g && S.kind==="badam" && applyPass(g,i); if (ng){ S.G = ng; broadcast(); } else if (g && S.kind==="badam" && g.phase==="playing") bad(i, g.turn!==i ? "It is not your turn." : "You still have a playable card."); break; }
+    case "next":
+      if (g && S.kind==="badam" && g.phase==="roundEnd"){ S.G = dealGame(g.players, g.round+1, g.rounds, g.penalty, g.v+1, g.decks); broadcast(); } break;
+    case "newmatch":
+      if (g && S.kind==="badam" && g.phase==="matchEnd"){ S.G = dealGame(g.players, 1, [], g.penalty, g.v+1, g.decks); broadcast(); } break;
+    case "trump": { const ng = g && court && courtTrump(g,i,m.suit); if (ng){ S.G = ng; broadcast(); } else bad(i,"You cannot choose the trump now."); break; }
+    case "cdeal": { const ng = g && court && courtShuffle(g,i); if (ng){ S.G = ng; broadcast(); } else bad(i,"Only the team that lost the last hand shuffles and deals."); break; }
+    case "cplay": {
+      const ng = g && court && courtPlay(g,i,m.card);
+      if (ng){ S.G = ng; broadcast(); if (ng.resolving) schedResolve(); }
+      else if (g && court && g.phase==="play") bad(i, g.turn!==i ? "It is not your turn." : "Follow the suit that was led.");
+      break; }
+    case "cnewmatch":
+      if (g && court && g.phase==="matchEnd"){ S.G = courtNew(g.players, g.target, g.v+1); broadcast(); } break;
+    case "ga": {
+      const gm = GAMES[S.kind], ng = g && gm && gm.act(g, i, m);
+      if (ng && ng.invalid) bad(i, "Those cards are not a valid declaration yet.");
+      else if (ng){ S.G = ng; broadcast(); if (ng.auto) schedAuto(); }
+      else if (g && gm) bad(i, "That move is not allowed now.");
+      break; }
+    case "emo": hostEmoji(i, m.e); break;
+    case "chat": {
+      const text = String(m.text||"").slice(0,300).trim();
+      if (text) hostChat({seat:i, from:S.seats[i].name, kind:"text", text});
+      break; }
+  }
+}
+let autoT = null;
+function schedAuto(){
+  clearTimeout(autoT);
+  autoT = setTimeout(()=>{ const gm = GAMES[S.kind]; if (S.role==="host" && S.G && S.G.auto && gm && gm.auto){ S.G = gm.auto(S.G); broadcast(); if (S.G.auto) schedAuto(); } }, (S.G && S.G.autoMs) || AUTO_MS);
+}
+const EMOJIS = ["😀","😂","😍","😮","😢","😡","👏","🔥","👍","🎉","🙏","❤️","♥️","♠️","♦️","♣️","🅰️","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","J","Q","K"];
+const lastEmo = {};
+function hostEmoji(i, e){
+  if (!EMOJIS.includes(e)) return;
+  const tk = S.seats[i].token, now = Date.now();
+  if (lastEmo[tk] && now - lastEmo[tk] < 700) return;
+  lastEmo[tk] = now;
+  S.seats.forEach(x=>{ if (x.token !== S.token) toSeat(x.token, {t:"emo", e, from:S.seats[i].name}); });
+  floatEmoji(e, S.seats[i].name);
+}
+function floatEmoji(e, from){
+  const box = $("#floats"); if (!box) return;
+  const d = document.createElement("div");
+  d.className = "emofloat"; d.style.left = (8 + Math.random()*76) + "%"; d.style.setProperty("--dx", (Math.random()*40-20)+"px");
+  d.innerHTML = `<span class="e">${esc(e)}</span><span class="w">${esc(from||"")}</span>`;
+  box.appendChild(d); setTimeout(()=>{ try{ d.remove(); }catch(x){} }, 3800);
+}
+function fakeNotice(n){
+  const box = $("#floats"); if (!box) return;
+  const d = document.createElement("div"); d.className = "fakefloat";
+  d.innerHTML = `<b>${esc(n.name)}</b><span>${esc(n.text)}</span>`;
+  box.appendChild(d); setTimeout(()=>{ try{ d.remove(); }catch(x){} }, 4200);
+  if (CFG.vibrate && navigator.vibrate){ try{ navigator.vibrate(120); }catch(e){} }
+}
+function celebrate(text){
+  try{
+    const old = document.getElementById("winbanner"); if (old) old.remove();
+    const b = document.createElement("div"); b.id = "winbanner"; b.innerHTML = `<div>🏆 ${esc(text)} 🏆<br><span style="font-size:20px">🎆 🎇 🎉 🎊</span></div>`;
+    document.body.appendChild(b); setTimeout(()=>{ try{ b.remove(); }catch(e){} }, 6600);
+    if (CFG.vibrate && navigator.vibrate){ try{ navigator.vibrate([100,50,100,50,300]); }catch(e){} }
+    const cv = document.getElementById("fx"); if (!cv || !cv.getContext) return;
+    const W = cv.width = innerWidth, H = cv.height = innerHeight, cx = cv.getContext("2d"), P = [], cols = ["#ffd76a","#ff5a5f","#4cc9f0","#7bd88f","#f78fb3","#fff"];
+    const burst = ()=>{ const x = W*(.15+Math.random()*.7), y = H*(.12+Math.random()*.4), c = cols[Math.floor(Math.random()*cols.length)];
+      for (let i=0;i<46;i++){ const a = Math.random()*6.283, v = 1.5+Math.random()*4.5; P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c}); } };
+    const t0 = Date.now(); let last = 0;
+    (function frame(){
+      const t = Date.now()-t0; if (t > 6500){ cx.clearRect(0,0,W,H); return; }
+      if (t-last > 260 && t < 5200){ burst(); last = t; }
+      cx.clearRect(0,0,W,H);
+      P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.05; p.vx*=.992; p.l-=.011; if (p.l>0){ cx.globalAlpha = p.l; cx.fillStyle = p.c; cx.beginPath(); cx.arc(p.x,p.y,2.6,0,6.283); cx.fill(); } });
+      for (let i=P.length-1;i>=0;i--) if (P[i].l<=0) P.splice(i,1);
+      requestAnimationFrame(frame);
+    })();
+  }catch(e){}
+}
+let resolveT = null;
+function schedResolve(){
+  clearTimeout(resolveT);
+  resolveT = setTimeout(()=>{ if (S.role==="host" && S.G && S.G.resolving){ S.G = courtResolve(S.G); broadcast(); } }, COURT_PAUSE);
+}
+function hostChat(m){
+  m.id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  S.chat.push(m);
+  if (S.chat.length > 40) S.chat.shift();
+  S.seats.forEach(s=>{ if(s.token!==S.token){ toSeat(s.token,{t:"chat",m}); } });
+  gotChat(m); saveHost();
+}
+
+/* ---- guest ---- */
+function startGuest(name, code, resume){
+  if (!brokerOf(code) && !relayUrl()){ toast("That room code is not valid."); return; }
+  const first = !S.role;
+  S.role = "guest"; S.name = name; S.code = code; S.resume = !!resume; S.hostAlive = false; keepAwake();
+  if (first) enterRoomUI();
+  killMq();
+  S.V = null; S.chat = []; S.status = "Connecting to the game service…";
+  if (!S.snap && resume){ try{ const sv = JSON.parse(lsGet("bs_snap")||"null"); if (sv && sv.code === code) S.snap = sv; }catch(e){} }
+  lsSet("bs_sess", JSON.stringify({role:"guest", code, name, pw:S.pw||""}));
+  render();
+  deriveKey(code, S.pw).then(key=>{
+  if (S.role !== "guest" || S.code !== code) return;
+  S.key = key;
+  const mq = openLink(code, null, key, ()=>{ if (S.role==="guest" && !S.V) failJoin("Wrong room password, or this room was made with an older version of the app."); });
+  S.mq = mq; let everUp = false;
+  const giveUp = setTimeout(()=>{
+    if (!everUp && S.mq === mq){ S.status = "Could not reach the game service. Check your internet, turn off VPN, or try mobile data."; render(); }
+  }, 12000);
+  mq.on("connect", ()=>{
+    everUp = true; clearTimeout(giveUp);
+    mq.subscribe([base()+"/alive", base()+"/g/"+S.token], {qos:0});
+    if (!S.V) S.status = "Looking for the room…";
+    render();
+    clearTimeout(S.aliveTimer);
+    S.aliveTimer = setTimeout(()=>{
+      if (S.role!=="guest" || S.hostAlive) return;
+      if (S.resume){ S.status = "The host is offline. Another player will take over…"; render(); maybeTakeover(); }
+      else failJoin("No room with that code. Check the code, or the host may have closed the room.");
+    }, 7000);
+    if (S.hostAlive) sendHello();
+  });
+  mq.on("message", (t, p)=>{
+    if (S.mq !== mq) return;
+    const s = p.toString();
+    if (t.endsWith("/alive")){
+      if (s){ const was = S.hostAlive; S.hostAlive = true; clearTimeout(S.takeT); S.takeT = null; if (!was || !S.V) sendHello(); }
+      else { S.hostAlive = false; if (S.role==="guest"){ S.status = "The host is offline. Another player will take over…"; render(); maybeTakeover(); } }
+      return;
+    }
+    try{ guestGot(JSON.parse(s)); }catch(e){}
+  });
+  mq.on("offline", ()=>{ if (S.mq===mq && everUp){ S.status = "Connection lost. Reconnecting…"; render(); } });
+  mq.on("error", ()=>{});
+  });
+}
+function sendHello(){
+  toHost({t:"hello", name:S.name});
+  clearTimeout(S.helloTimer);
+  S.helloTimer = setTimeout(()=>{
+    if (S.role==="guest" && !S.V){ S.status = "The host did not answer. Ask them to keep the app open, then tap Back and try again."; render(); }
+  }, 9000);
+}
+function guestGot(m){
+  if (!m) return;
+  if (m.t === "vc"){ onChunk(m, guestGot); return; }
+  if (m.t === "pong"){
+    S.rtt = Date.now() - m.ts; S.lastPong = Date.now(); updateNet();
+    if (S.V && m.seq > S.V.seq) toHost({t:"sync"});     // missed an update: ask for the latest
+    return;
+  }
+  if (m.t === "toast"){ toast(m.msg); return; }
+  if (m.t === "view"){
+    if (S.V && m.v.code === S.V.code && m.v.seq <= S.V.seq) return;   // drop out-of-date views
+    clearTimeout(S.helloTimer); clearTimeout(S.aliveTimer);
+    S.V = m.v; S.resume = true; S.status = ""; S.lastPong = Date.now();
+    if (m.snap){ S.snap = m.snap; lsSet("bs_snap", JSON.stringify(m.snap)); }
+    render();
+  }
+  else if (m.t === "emo") floatEmoji(m.e, m.from);
+  else if (m.t === "chat") gotChat(m.m);
+  else if (m.t === "history"){ S.chat = []; (m.chat||[]).forEach(x=>S.chat.push(x)); drawChat(); }
+  else if (m.t === "err"){
+    if (m.retry && S.resume){ S.status = m.msg + " Retrying…"; render(); setTimeout(()=>{ if (S.role==="guest" && !S.V) sendHello(); }, 4000); }
+    else failJoin(m.msg);
+  }
+}
+// if the host disappears, the next player in line quietly takes over running the table
+function maybeTakeover(){
+  if (S.role !== "guest" || S.hostAlive || !S.snap || S.takeT) return;
+  const sn = S.snap;
+  if (Date.now() - sn.t > 6*3600*1000) return;
+  const cand = sn.seats.filter(x=>x.online && x.token !== sn.hostTok);
+  const rank = cand.findIndex(x=>x.token === S.token);
+  if (rank < 0) return;
+  S.takeT = setTimeout(()=>{
+    S.takeT = null;
+    if (S.role === "guest" && !S.hostAlive && S.mq && S.mq.connected){ toast("The host left. You are now running the table."); startHost(S.name, {resume:S.snap, takeover:true}); }
+  }, 2500 + rank*3500);
+}
+function failJoin(msg){ leave(); toast(msg); }
+function leave(){
+  clearTimeout(S.aliveTimer); clearTimeout(S.helloTimer); releaseAwake();
+  clearTimeout(S.takeT); S.takeT = null;
+  if (S.role === "guest") toHost({t:"bye"});
+  const m = S.mq, wasHost = S.role === "host", topic = S.code ? base()+"/alive" : null;
+  S.mq = null;
+  if (m){
+    try{
+      m.removeAllListeners();
+      if (wasHost && topic && m.connected){
+        m.publish(topic, "", {qos:0, retain:true}, ()=>{ try{ m.end(true); }catch(e){} });
+        setTimeout(()=>{ try{ m.end(true); }catch(e){} }, 1500);
+      } else setTimeout(()=>{ try{ m.end(true); }catch(e){} }, 150);
+    }catch(e){}
+  }
+  S.role=null; S.V=null; S.G=null; S.seats=[]; S.status=""; S.setup=false;
+  S.selected=null; S.scoresOpen=false; S.settingsOpen=false; S.dismissed=0; S.chat=[]; S.unread=0; S.chatOpen=false;
+  S.wasMyTurn=false; clearTimeout(resolveT); clearTimeout(autoT); S.seq=0; S.rtt=null; S.lastPong=0; S.resume=false; S.hostAlive=false;
+  lsSet("bs_sess", null); lsSet("bs_host", null); lsSet("bs_snap", null); S.snap = null;
+  $("#chatveil").hidden = true;
+  render(); drawChat();
+}
+function confirmLeave(){
+  const msg = S.role==="host" ? "Leaving passes the table to another player. If everyone leaves, the game ends. Leave anyway?" : "Leave the room? You can rejoin with the room code and the same name.";
+  if (window.confirm(msg)) leave();
+}
+function act(m){
+  if (S.role === "host") hostAct(myIdx(), m);
+  else if (S.mq && S.mq.connected) toHost(m);
+  else toast("Not connected. Reconnecting…");
+}
+
+/* ================= connection health, wake lock, turn alerts ================= */
+const baseTitle = document.title;
+function predictV(V){
+  const g = V.g; if (!g) return null;
+  const n = g.players.length, num = x=>Number(x)||0, cnt = g.counts || [], ex = k=>Math.exp(k);
+  let w, team = false;
+  const k = V.kind;
+  if (k==="court" || k==="dehla"){
+    team = true; const sc = g.score || [0,0], tr = k==="court" ? (g.tricks||[0,0]) : (g.cards||g.tens||[0,0]);
+    w = [0,1].map(t=>ex(.7*num(sc[t]) + .35*num(tr[t])));
+  } else if (k==="patti"){
+    const avg = g.chips.reduce((a,b)=>a+b,0)/n || 1;
+    w = g.players.map((_,i)=> (g.out[i]||g.folded[i]) ? .02 : ex(g.chips[i]/avg));
+  } else if (k==="teendo"){ w = g.players.map((_,i)=>ex(.5*num((g.score||[])[i]) - .05*num(cnt[i])));
+  } else if (k==="rummy"){ w = g.players.map((_,i)=>ex(-.04*num((g.scores||[])[i]) - .1*num(cnt[i])));
+  } else if (k==="uno"){ w = g.players.map((_,i)=>ex(-.4*num(cnt[i])));
+  } else if (k==="bluff"){ w = g.players.map((_,i)=>ex(-.1*num(cnt[i])));
+  } else { w = g.players.map((_,i)=>ex(-.3*num(cnt[i]))); }   // Badam Sat: fewer cards left is better
+  const sum = w.reduce((a,b)=>a+b,0) || 1;
+  return { team, rows: w.map((x,i)=>({name: team ? "Team "+(i?"B":"A") : g.players[i].name, p: Math.round(100*x/sum), me: team ? (V.me%2===i) : V.me===i})) };
+}
+function updatePred(){
+  const b = document.getElementById("predbar"); if (!b || b.hidden) return;
+  const r = S.V ? predictV(S.V) : null; if (!r){ b.hidden = true; return; }
+  b.innerHTML = '<b>Chance to win right now</b><div class="note">A rough guess from cards left, scores and tricks. It does not know anyone\'s hidden cards. Tap outside to close.</div>' + r.rows.map(x=>`<div class="pr"><div class="t"><span>${esc(x.name)}${x.me?" (you)":""}</span><b>${x.p}%</b></div><div class="bar"><i style="width:${x.p}%"></i></div></div>`).join("");
+}
+document.addEventListener("pointerdown", e=>{ const b = document.getElementById("predbar"); if (b && !b.hidden && !b.contains(e.target) && !(e.target.closest && e.target.closest("#predbtn"))) b.hidden = true; }, true);
+function closeEmo(){ const b = document.getElementById("emobar"); if (b) b.hidden = true; }
+document.addEventListener("pointerdown", e=>{ const b = document.getElementById("emobar"); if (b && !b.hidden && !b.contains(e.target) && !(e.target.closest && e.target.closest("#emobtn"))) b.hidden = true; }, true);
+(function(){ const b = document.getElementById("emobar"); if (b) b.innerHTML = '<button id="emoclose" aria-label="Close reactions" style="font-size:18px;font-weight:800;width:100%">✕ Close</button>' + EMOJIS.map(e=>`<button data-emo="${e}" aria-label="Send ${e}">${e}</button>`).join(""); })();
+let wl = null;
+async function keepAwake(){
+  try{ if ("wakeLock" in navigator && !wl && S.role && !document.hidden){ wl = await navigator.wakeLock.request("screen"); wl.addEventListener("release", ()=>{ wl = null; }); } }catch(e){}
+}
+function releaseAwake(){ try{ if (wl) wl.release(); }catch(e){} wl = null; }
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && S.role==="host"){ const now = Date.now(); S.seats.forEach(x=>{ if (x.token!==S.token) x.last = now; }); broadcast(); } });
+window.addEventListener("online", ()=>{ if (S.role==="guest") setTimeout(resync, 800); });
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden){ keepAwake(); if (S.role==="guest") S.lastPong = Date.now(); document.title = baseTitle; } });
+function updateNet(){
+  const el = $("#net"); if (!el) return;
+  if (S.role === "host"){ el.textContent = "Host"; el.style.color = "#1d7a45"; return; }
+  const r = S.rtt;
+  el.textContent = r == null ? "…" : r + " ms";
+  el.style.color = r == null ? "#7a6c58" : r < 350 ? "#1d7a45" : r < 1000 ? "#b07a10" : "#b3261e";
+}
+function resync(){ if (S.role==="guest" && S.mq && S.mq.connected && S.hostAlive) sendHello(); }
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) resync(); });
+setInterval(()=>{
+  if (S.role === "guest" && S.mq && S.mq.connected){
+    toHost({t:"ping", ts:Date.now()});
+    if (S.lastPong && Date.now() - S.lastPong > 14000 && !document.hidden){ S.lastPong = Date.now(); resync(); }
+  }
+  if (S.role === "host" && S.mq && S.mq.connected && S.G !== undefined && ((S.aliveTick = (S.aliveTick||0)+1) % 3 === 0)){ try{ S.mq.publish(base()+"/alive", JSON.stringify({max:S.max, t:Date.now(), h:S.token, q:S.seq}), {qos:0, retain:true}); }catch(e){} }
+  if (S.role === "host"){
+    let changed = false;
+    S.seats.forEach(x=>{ if (x.token!==S.token && x.online && x.last && Date.now() - x.last > 180000){ x.online = false; changed = true; } });
+    if (changed) broadcast();
+  }
+}, 4000);
+let audioCtx = null;
+function unlockAudio(){ try{ if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx.state==="suspended") audioCtx.resume(); }catch(e){} }
+document.addEventListener("pointerdown", unlockAudio, {passive:true});
+function beep(){
+  try{
+    unlockAudio(); if (!audioCtx) return;
+    [0,0.18].forEach(d=>{
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+      const t = audioCtx.currentTime + d;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t+0.14);
+      o.start(t); o.stop(t+0.16);
+    });
+  }catch(e){}
+}
+function notifyTurn(){
+  if (CFG.vibrate && navigator.vibrate){ try{ navigator.vibrate([220,90,220]); }catch(e){} }
+  if (CFG.sound) beep();
+  if (document.hidden){
+    document.title = "Your turn · TashGhar";
+    try{ if ("Notification" in window && Notification.permission === "granted" && navigator.serviceWorker){
+      navigator.serviceWorker.ready.then(r=>r.showNotification("Your turn", {body:"It is your turn in room "+(S.code||""), icon:"icon-192.png", badge:"icon-192.png", tag:"turn", renotify:true, vibrate:[300,100,300,100,300], requireInteraction:true}));
+    } }catch(e){}
+  }
+}
+function askNotify(){ try{ if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }catch(e){} }
+document.addEventListener("click", ()=>{ if (S.role) askNotify(); }, {once:false, capture:true});
+
+/* ================= chat ================= */
+function gotChat(m){
+  if (S.chat.some(x=>x.id===m.id)) return;
+  S.chat.push(m);
+  if (!S.chatOpen) S.unread++;
+  drawChat();
+}
+function drawChat(){
+  const box = $("#msgs");
+  const mySeat = S.V ? S.V.me : -1;
+  box.innerHTML = S.chat.length ? S.chat.map(m=>{
+    const mine = m.seat === mySeat;
+    const body = `<span>${esc(m.text)}</span>`;
+    return `<div class="msg ${mine?"mine":""}"><span class="who">${mine?"You":esc(m.from)}</span>${body}</div>`;
+  }).join("") : `<div class="note">No messages yet. Say hello.</div>`;
+  box.scrollTop = box.scrollHeight;
+  document.querySelectorAll(".chatbtn .badge").forEach(b=>{ b.hidden = S.unread === 0; b.textContent = S.unread; });
+}
+function sendText(){
+  const el = $("#chatinput"), text = el.value.trim();
+  if (!text) return;
+  el.value = "";
+  act({t:"chat",text});
+}
+function openChat(open){
+  S.chatOpen = open; $("#chatveil").hidden = !open;
+  if (open){ S.unread = 0; drawChat(); $("#chatinput").focus(); }
+  else if (rec) rec.stop();
+}
+
+/* ================= rendering ================= */
+function cardHTML(n, cls, attrs){
+  const r = RANKS[rk(n)-1], su = SUITS[st(n)];
+  return `<button class="pc ${RED[st(n)]?"red":""} ${cls||""}" ${attrs||""} aria-label="${lab(n)}"><span class="tl">${r}<br>${su}</span><span class="mid">${su}</span><span class="br">${r}<br>${su}</span></button>`;
+}
+let installPrompt = null;
+function isStandalone(){ return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installPrompt = e; if (!S.role) render(); });
+window.addEventListener("appinstalled", ()=>{ installPrompt = null; if (!S.role) render(); });
+if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+function settingsHTML(){
+  return `<div class="veil"><div class="sheet" role="dialog" aria-label="Settings">
+    <h2>Settings</h2>
+    <div class="note">These apply to this device only. Each player chooses their own.</div>
+    <label class="sw" for="cfg-hints"><span>Show hints<br><span class="note">Highlight the cards you can play and dim the rest</span></span><input type="checkbox" id="cfg-hints" ${CFG.hints?"checked":""}></label>
+    <label class="sw" for="cfg-vib"><span>Vibrate on my turn<br><span class="note">Android phones only. iPhone does not allow web pages to vibrate</span></span><input type="checkbox" id="cfg-vib" ${CFG.vibrate?"checked":""}></label>
+    <div class="note">Away alerts: if you switch apps or lock the screen, you stay in the room for 3 minutes. When it is your turn you get a notification (allow notifications when asked). ${("Notification" in window)?(Notification.permission==="granted"?"Notifications are on.":Notification.permission==="denied"?"Notifications are blocked in your browser settings.":"Tap anywhere in a room to be asked."):"This browser has no notifications."}</div>
+    <label class="sw" for="cfg-pred"><span>Winning chances button 📊<br><span class="note">Shows a rough chance of winning for each player. Only you see it</span></span><input type="checkbox" id="cfg-pred" ${CFG.predict?"checked":""}></label>
+    <label class="sw" for="cfg-snd"><span>Sound on my turn<br><span class="note">A short double beep. Works on iPhone and Android</span></span><input type="checkbox" id="cfg-snd" ${CFG.sound?"checked":""}></label>
+    <div><label>Card size</label><div class="seg" role="group" aria-label="Card size">
+      ${["S","M","L"].map(k=>`<button data-size="${k}" class="${CFG.size===k?"on":""}">${{S:"Small",M:"Medium",L:"Large"}[k]}</button>`).join("")}
+    </div></div>
+    <details class="log"><summary>Private server (advanced)</summary><div class="logl"><div class="note">Paste the address of your own relay server (see relay/README.md). Leave blank to use the free public servers. Messages are encrypted either way.</div><input id="cfg-relay" placeholder="wss://your-relay.workers.dev" value="${esc(lsGet("bs_relay")||"")}" autocomplete="off"></div></details>
+    <button class="btn" id="closesettings">Done</button></div></div>`;
+}
+function chatBtn(){ return `<button class="btn ghost small chatbtn" id="chatbtn">Chat<span class="badge" ${S.unread?"":"hidden"}>${S.unread}</span></button><button class="btn ghost small" id="emobtn" aria-label="Send a reaction">😀</button>${CFG.predict?`<button class="btn ghost small" id="predbtn" aria-label="Winning chances">📊</button>`:""}<button class="btn ghost small" id="hidebtn" aria-label="Hide or show my cards">${document.body.classList.contains("hidecards")?"👁":"🙈"}</button>`; }
+function stageOf(V){ const g = V && V.g; if (!g) return 0; return g.hand || g.deal || g.round || 0; }
+function myTurnNow(V){
+  const g = V.g, me = V.me; if (!g) return false;
+  switch (V.kind){
+    case "court": return (g.phase==="play" && !g.resolving && g.turn===me) || (g.phase==="trump" && g.chooser===me);
+    case "patti": return g.phase==="bet" && g.turn===me && !g.folded[me];
+    case "teendo": return (g.phase==="play" && !g.resolving && g.turn===me) || (g.phase==="trump" && g.chooser===me) || (g.phase==="pull" && g.pull && g.pull.taker===me);
+    case "dehla": return g.phase==="play" && !g.resolving && g.turn===me;
+    case "rummy": return (g.phase==="draw" || g.phase==="discard") && g.turn===me;
+    case "uno": return g.phase==="play" && g.turn===me;
+    case "bluff": return g.phase==="play" && g.turn===me;
+    default: return g.phase==="playing" && g.turn===me;
+  }
+}
+function prefCW(){ return {S:56,M:72,L:92}[CFG.size] || 72; }
+// pick the biggest card width at which the whole hand fits in the bottom dock, so no card ever leaves the screen
+function fitCW(n){
+  const W = Math.min(document.documentElement.clientWidth || window.innerWidth || 390, 560) - 32, gap = 6, rowGap = 10;
+  const budget = Math.max(150, (window.innerHeight || 700) * 0.42 - 70);
+  for (let cw = prefCW(); cw >= 40; cw -= 2){
+    const c = Math.max(1, Math.floor((W+gap)/(cw+gap))), r = Math.ceil(Math.max(n,1)/c);
+    if (r*(cw*1.42+rowGap) <= budget) return cw;
+  }
+  return 40;
+}
+function playersLabel(k){ const i = GAME_INFO[k]; return i.min===i.max ? `${i.min} players` : `${i.min} to ${i.max} players`; }
+function renderHome(){
+  const gt = S.gameType, info = GAME_INFO[gt];
+  return `
+  <div class="hero"><img class="logo" src="icon-192.png" alt="TashGhar logo" width="72" height="72"><h1>TashGhar</h1>
+    <p>Card games with friends. Private rooms, hidden hands, text chat and reactions.</p></div>
+  <div class="gtiles" role="tablist" aria-label="Choose a game">${Object.keys(GAME_INFO).map(k=>`<button class="gtile ${k===gt?"on":""}" data-gt="${k}" role="tab"><b>${GAME_INFO[k].name}</b><small>${playersLabel(k)}</small></button>`).join("")}</div>
+  <div class="panel"><h2 class="gname">${info.name}</h2><div class="note">${info.tag}</div>
+    <details class="log rules"><summary>Full rules of ${info.name}</summary><div class="rulebody">${RULES[gt]||""}</div></details>
+    <div><label for="name">Your name</label><input id="name" maxlength="14" autocomplete="nickname" value="${esc(S.name)}" placeholder="e.g. Asha"></div>
+    <button class="btn" id="create">Create a ${info.name} room</button>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <div><label for="joincode">Room code</label><input id="joincode" class="code" maxlength="5" placeholder="ABCDE" autocomplete="off"></div>
+      <div><label for="joinpw">Room password</label><input id="joinpw" type="password" maxlength="24" autocomplete="off" placeholder="From the host"></div>
+    </div>
+    <button class="btn" id="join">Join room</button>
+    <div class="note">The code works for any game. Everything in a room is encrypted with its password.</div>
+  </div>
+  <button class="btn ghost" id="settings">Settings</button>
+  ${installPrompt ? `<button class="btn gold" id="install">Install the app</button>` : (isStandalone() ? "" : `<div class="note">To install: on Android Chrome use the menu, then Install app. On iPhone Safari tap Share, then Add to Home Screen.</div>`)}`;
+}
+function renderSetup(){
+  const gt = S.gameType, info = GAME_INFO[gt];
+  const pw = `<div><label for="pw">Room password</label><input id="pw" type="password" maxlength="24" autocomplete="off" value="${esc(S.pw||"")}" placeholder="Choose one and share it"><div class="note">Everything in the room is encrypted with this password. Only people who know it can read or join. Leave it blank and only the room code protects you.</div></div>`;
+  let opts = "";
+  if (gt==="bluff"){
+    const n = Math.min(info.max, Math.max(info.min, S.setupN)), dk = [1,2,3].includes(S.targetN) ? S.targetN : 2;
+    opts = `<label>How many players, counting you?</label><div class="seg">${Array.from({length:info.max-info.min+1},(_,k)=>k+info.min).map(k=>`<button data-count="${k}" class="${k===n?"on":""}">${k}</button>`).join("")}</div><label>Number of decks</label><div class="seg" role="group" aria-label="Decks">${[1,2,3].map(k=>`<button data-target="${k}" class="${k===dk?"on":""}">${k}</button>`).join("")}</div><div class="note">${52*dk} cards are dealt out. Suggested: 1 deck for 2 to 4 players, 2 for 5 to 6, 3 for 7 to 8.</div>`;
+  } else if (TEAMED(gt)){
+    opts = `<label>Points needed to win the match</label><div class="seg" role="group" aria-label="Target points">${[3,5,7,10].map(k=>`<button data-target="${k}" class="${k===S.targetN?"on":""}">${k}</button>`).join("")}</div>
+      <div class="note">${gt==="court" ? "A team that wins 7 or more of the 13 tricks scores 1 point. Winning all 13 (a Court) scores 3." : "A hand win scores 1 point. Taking all four tens (a Kot) scores 3."}</div>`;
+  } else if (info.min !== info.max){
+    const n = Math.min(info.max, Math.max(info.min, S.setupN));
+    opts = `<label>How many players, counting you?</label><div class="seg" role="group" aria-label="Number of players">${Array.from({length:info.max-info.min+1},(_,k)=>k+info.min).map(k=>`<button data-count="${k}" class="${k===n?"on":""}">${k}</button>`).join("")}</div>
+      ${gt==="badam" ? `<label>Number of decks</label><div class="seg" role="group" aria-label="Decks">${[1,2,3].map(k=>`<button data-target="${k}" class="${k===([1,2,3].includes(S.targetN)?S.targetN:1)?"on":""}">${k}</button>`).join("")}</div><div class="note">With more than one deck, a second copy of a card already on the table can be played on top of it.</div>` : ""}
+      ${gt==="badam" ? `<div class="note">${(()=>{ const T = 52*([1,2,3].includes(S.targetN)?S.targetN:1); return `${n} players, ${T%n===0?`${T/n} cards each`:`${Math.floor(T/n)} or ${Math.ceil(T/n)} cards each`}. All cards are dealt every game.`; })()}</div>` : ""}`;
+  } else opts = `<div class="note">${info.name} is played by exactly ${info.min} players.</div>`;
+  return `
+  <div class="hero"><img class="logo" src="icon-192.png" alt="" width="72" height="72"><h1>${info.name}</h1><p>${info.tag}</p></div>
+  <div class="panel">${opts}${pw}
+    <button class="btn" id="createroom">Create room</button>
+    <button class="btn ghost" id="setupback">Back</button>
+  </div>`;
+}
+function renderLobby(V){
+  const info = GAME_INFO[V.kind], teamed = TEAMED(V.kind), court = V.kind==="court";
+  const n = V.seats.length, max = V.max;
+  const nm = t => t ? "B" : "A";
+  let seatsHTML, ready = n === max;
+  if (teamed){
+    const mine = V.seats[V.me] && V.seats[V.me].team;
+    const box = t => {
+      const mem = V.seats.map((x,i)=>({x,i})).filter(o=>o.x.team===t);
+      const slots = [0,1].map(k=>{ const o = mem[k];
+        return o ? `<div class="seat on"><small>${o.x.online?"":"offline"}</small><b>${esc(o.x.name)}${o.i===V.me?" (you)":""}</b></div>` : `<div class="seat"><span class="note">Open spot</span></div>`; }).join("");
+      const join = mine !== t && mem.length < 2 ? `<button class="btn small" data-team="${t}">Join Team ${nm(t)}</button>` : "";
+      return `<div class="teambox"><h3>Team ${nm(t)}</h3>${slots}${join}</div>`;
+    };
+    seatsHTML = `<div class="teams">${box(0)}${box(1)}</div>`;
+    ready = n === 4 && V.seats.filter(x=>x.team===0).length === 2 && V.seats.filter(x=>x.team===1).length === 2;
+  } else {
+    seatsHTML = `<div class="seats">${Array.from({length:max},(_,i)=>{
+      const x = V.seats[i];
+      return x ? `<div class="seat on"><small>Seat ${i+1}${x.online?"":" · offline"}</small><b>${esc(x.name)}${i===V.me?" (you)":""}</b></div>`
+               : `<div class="seat"><small>Seat ${i+1}</small><span class="note">Waiting…</span></div>`; }).join("")}</div>`;
+  }
+  const rules = `<details class="log rules"><summary>Full rules of ${info.name}</summary><div class="rulebody">${RULES[V.kind]||""}</div></details>`;
+  const startLabel = ready ? ({court:"Start match",dehla:"Start match",patti:"Deal the first hand",rummy:"Deal",uno:"Deal",teendo:"Deal"}[V.kind] || "Deal game 1") : (teamed ? "Needs two players on each team" : `Waiting for ${max-n} more`);
+  return `
+  <div class="top"><div class="brand">${info.name}</div>${chatBtn()}<button class="btn ghost small" id="settings">Settings</button><button class="btn ghost small" id="leave">Leave</button></div>
+  <div class="panel"><div class="note" style="text-align:center">Room code for ${max} players. Share it, and the password if you set one.</div><div class="bigcode" aria-label="Room code">${esc(V.code)}</div></div>
+  ${seatsHTML}
+  <div class="panel">
+    ${V.kind==="badam" ? `<div><label for="pen">Pass penalty</label>
+      <select id="pen"><option value="0" ${V.penalty?"":"selected"}>Off</option><option value="5" ${V.penalty===5?"selected":""}>5 points each time you pass</option></select></div>` : ""}
+    ${teamed ? `<div class="note">First team to ${V.target} points wins the match.</div>` : ""}
+    <button class="btn" id="start" ${ready?"":"disabled"}>${startLabel}</button>
+    ${!teamed && info.min!==info.max && n>=info.min && n<max ? `<button class="btn ghost" id="startnow">Start now with ${n} players</button>` : ""}
+    <div class="note">Anyone at the table can start. If the host leaves, another player takes over automatically.</div>
+  </div>
+  ${rules}`;
+}
+function scoresHTML(V){
+  const g = V.g, t = totals(g), w = wins(g), order = standings(g);
+  const head = Array.from({length:TOTAL_GAMES},(_,k)=>`<th>G${k+1}</th>`).join("");
+  const rows = order.map((i,pos)=>{
+    const cells = Array.from({length:TOTAL_GAMES},(_,k)=>{
+      const r = g.rounds[k];
+      if (!r) return `<td>${k===g.rounds.length && g.phase==="playing" ? "·" : ""}</td>`;
+      return `<td class="${r.winner===i?"win":""}">${r.pts[i]}</td>`;
+    }).join("");
+    return `<tr class="${g.rounds.length>0&&pos===0?"lead":""}"><td>${esc(g.players[i].name)}${i===V.me?" (you)":""}</td>${cells}<td class="tot">${t[i]}</td><td>${w[i]}</td></tr>`;
+  }).join("");
+  return `<div class="tablewrap"><table><thead><tr><th>Player</th>${head}<th>Total</th><th>Wins</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="note">Maroon marks the winner of each game. Lowest total wins the match. Ties go to the player with more game wins.</div>`;
+}
+function teamNames(g,t){ return [g.players[t].name, g.players[t+2].name].map(esc).join(" &amp; "); }
+function courtScoresHTML(V){
+  const g = V.g;
+  const rows = g.hlog.map((h,k)=>`<tr><td>${k+1}</td><td class="${RED[h.trump]?"":""}">${SUITS[h.trump]}</td><td>${h.tricks[0]}</td><td>${h.tricks[1]}</td><td class="win">${h.team===0?"A":"B"} +${h.pts}${h.court?" Court":""}</td></tr>`).join("");
+  return `<div class="tablewrap"><table><thead><tr><th>Hand</th><th>Trump</th><th>A tricks</th><th>B tricks</th><th>Point</th></tr></thead><tbody>${rows || `<tr><td colspan="5" class="note">No hands finished yet</td></tr>`}
+    <tr class="lead"><td>Total</td><td></td><td></td><td></td><td class="tot">A ${g.score[0]} · B ${g.score[1]}</td></tr></tbody></table></div>
+  <div class="note">Team A: ${teamNames(g,0)}. Team B: ${teamNames(g,1)}. First to ${g.target} points wins.</div>`;
+}
+function handHTML(hand, myTurn, okFn, hintsOn){
+  return hand.map(c=>{
+    const ok = myTurn && okFn(c);
+    return cardHTML(c, (myTurn && hintsOn ? (ok?"ok":"dim") : "") + (S.selected===c?" sel":""), `data-card="${c}"`);
+  }).join("");
+}
+function renderGame(V){
+  const g = V.g, me = V.me, N = g.players.length;
+  const myTurn = g.phase==="playing" && g.turn===me;
+  const hand = g.myHand;
+  const playable = hand.filter(c=>legal(g.table,c));
+  const hints = CFG.hints;
+  if (S.selected!=null && !(myTurn && (hints ? playable.includes(S.selected) : hand.includes(S.selected)))) S.selected = null;
+  const t = totals(g), w = wins(g), order = standings(g);
+  const rank = g.rounds.length ? order.indexOf(me)+1 : "–";
+  const opps = Array.from({length:N-1},(_,k)=>(me+1+k)%N).map(i=>`
+    <div class="opp ${g.phase==="playing"&&g.turn===i?"turn":""}">
+      <div class="n">${esc(g.players[i].name)}${V.seats[i]&&!V.seats[i].online?" (offline)":""}</div>
+      <div class="c">${g.counts[i]} cards · ${t[i]} pts</div>
+      <div class="fan" aria-hidden="true">${Array.from({length:g.counts[i]},()=>"<i></i>").join("")}</div>
+    </div>`).join("");
+  const lanes = [0,1,2,3].map(s=>{
+    const tb = g.table[s];
+    const cells = Array.from({length:13},(_,k)=>{
+      const r = k+1, on = tb.lo && r>=tb.lo && r<=tb.hi, isNew = on && g.last>=0 && g.last%52===s*13+k, dn = on && tb.cn && tb.cn[r]>1 ? `<sup>×${tb.cn[r]}</sup>` : "";
+      return `<div class="cell ${on?"on":""} ${RED[s]?"red":""} ${r===7?"seven":""} ${isNew?"new":""}">${on ? `${RANKS[k]}<small>${SUITS[s]}</small>${dn}` : RANKS[k]}</div>`;
+    }).join("");
+    return `<div class="lane"><div class="s ${RED[s]?"red":""}">${SUITS[s]}</div>${cells}</div>`;
+  }).join("");
+  let banner;
+  if (g.phase!=="playing") banner = "Game over";
+  else if (myTurn) banner = !hints ? "Your turn" : playable.length ? "Your turn. Pick a card" : "Your turn. No playable card";
+  else banner = `Waiting for ${esc(g.players[g.turn].name)}`;
+  const playBtn = `<button class="btn" id="play" ${S.selected==null?"disabled":""}>${S.selected==null?"Select a card":"Play "+lab(S.selected)}</button>`;
+  const passBtn = `<button class="btn ${hints&&!playable.length?"":"ghost"}" id="pass">Pass${g.penalty?` (+${g.penalty} pts)`:""}</button>`;
+  const act_ = myTurn ? `<div class="actions">${!hints ? playBtn + passBtn : (playable.length ? playBtn + passBtn : passBtn)}</div>` : "";
+  const cw = fitCW(hand.length);
+  return `
+  <div class="top"><div class="brand">Badam Sat</div><span class="chip">Game <b>${Math.min(g.round,g.total)}</b> of ${g.total}</span><span class="chip" id="net" aria-label="Connection">…</span></div>
+  <div class="top"><button class="btn ghost small" id="scores">Scoreboard</button>${chatBtn()}<button class="btn ghost small" id="settings">Settings</button><span style="margin-left:auto"></span><button class="btn ghost small" id="leave">Leave</button></div>
+  <div class="opps">${opps}</div>
+  <div class="banner ${myTurn?"me":""}">${banner}</div>
+  <div class="board" role="group" aria-label="Table">${lanes}</div>
+  <details class="log" id="logbox" ${S.logOpen?"open":""}><summary>Game log · Room ${esc(V.code)}</summary><div class="logl">${g.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div></details>
+  <div class="dock">
+    <div class="mescore compact" aria-label="Your score"><span><b>${t[me]}</b>pts</span><span><b>${rank}</b>of ${N}</span><span><b>${w[me]}</b>wins</span><span><b>${hand.length}</b>cards</span></div>
+    ${act_}
+    <div class="hand" style="--cw:${cw}px">${handHTML(hand, myTurn, c=>playable.includes(c), hints) || `<span class="note">No cards left</span>`}</div>
+  </div>`;
+}
+function renderCourt(V){
+  const g = V.g, me = V.me, myTeam = me % 2;
+  const myTurn = g.phase==="play" && !g.resolving && g.turn===me;
+  const chooseMe = g.phase==="trump" && g.chooser===me;
+  const canDeal = (g.phase==="deal" || g.phase==="handEnd") && (g.dealTeam===null || g.dealTeam===myTeam);
+  const hand = g.myHand, hints = CFG.hints;
+  const legalSet = new Set(hand.filter(c=>legalCourt(hand, g.trick, c)));
+  if (S.selected!=null && !(myTurn && (hints ? legalSet.has(S.selected) : hand.includes(S.selected)))) S.selected = null;
+  const us = g.tricks[me] + g.tricks[(me+2)%4], them = g.tricks[(me+1)%4] + g.tricks[(me+3)%4];
+  const area = ["3 / 2","2 / 1","1 / 2","2 / 3"];
+  const slots = [0,1,2,3].map(rel=>{
+    const p = (me+rel)%4, tc = g.trick.find(x=>x.p===p);
+    const isTurn = g.phase==="play" && !g.resolving && g.turn===p, isWin = g.resolving && g.trickWinner===p;
+    return `<div class="tslot ${isTurn?"turn":""} ${isWin?"win":""}" style="grid-area:${area[rel]}"><span class="nm">${esc(g.players[p].name)}${p===me?" (you)":p===(me+2)%4?" · partner":""}</span>${tc ? cardHTML(tc.c,"mini","") : `<div class="tempty"></div>`}<span class="cnt">${g.counts[p]} card${g.counts[p]===1?"":"s"}</span></div>`;
+  }).join("");
+  const tn = t => t ? "B" : "A";
+  let banner;
+  if (g.phase==="deal") banner = "Any player can shuffle and deal the first hand";
+  else if (g.phase==="handEnd") banner = canDeal ? "Your team shuffles and deals" : `Team ${tn(g.dealTeam)} shuffles and deals`;
+  else if (g.phase==="trump") banner = chooseMe ? "Choose the trump suit" : `${esc(g.players[g.chooser].name)} is choosing the trump suit`;
+  else if (g.phase==="play"){
+    if (g.resolving) banner = `${esc(g.players[g.trickWinner].name)} wins the trick`;
+    else if (myTurn) banner = g.trick.length ? (hints ? "Your turn. Follow the suit led if you can" : "Your turn") : "Your turn. Lead any card";
+    else banner = `Waiting for ${esc(g.players[g.turn].name)}`;
+  } else banner = "Hand over";
+  const handCards = handHTML(hand, myTurn, c=>legalSet.has(c), hints);
+  const playBtn = `<div class="actions"><button class="btn" id="play" ${S.selected==null?"disabled":""}>${S.selected==null?"Select a card":"Play "+lab(S.selected)}</button></div>`;
+  const dealBtn = `<div class="actions"><button class="btn gold" id="cdeal">Shuffle &amp; deal</button></div>`;
+  const pick = chooseMe ? `<div class="note">Look at your first 5 cards, then pick the trump. Trumps beat every other suit.</div><div class="suitpick">${[0,1,2,3].map(x=>`<button data-trump="${x}" class="${RED[x]?"red":""}" aria-label="Trump ${SUITS[x]}">${SUITS[x]}</button>`).join("")}</div>`
+    : (g.phase==="deal" && canDeal ? dealBtn : (myTurn ? playBtn : ""));
+  const cw = fitCW(hand.length);
+  const trumpTxt = g.trump >= 0 ? `<b style="color:${RED[g.trump]?"#ffaaa4":"#fff"}">${SUITS[g.trump]}</b>` : `<b>?</b>`;
+  return `
+  <div class="top"><div class="brand">Court Piece</div><span class="chip">Hand <b>${g.hand}</b></span><span class="chip" id="net" aria-label="Connection">…</span></div>
+  <div class="top"><button class="btn ghost small" id="scores">Scoreboard</button>${chatBtn()}<button class="btn ghost small" id="settings">Settings</button><span style="margin-left:auto"></span><button class="btn ghost small" id="leave">Leave</button></div>
+  <div class="cscore">
+    <div class="team me"><small>Your team</small><b>${g.score[myTeam]}</b><span class="nm">${teamNames(g,myTeam)}</span></div>
+    <div class="vs">First to<br>${g.target}</div>
+    <div class="team"><small>Opponents</small><b>${g.score[1-myTeam]}</b><span class="nm">${teamNames(g,1-myTeam)}</span></div>
+  </div>
+  <div class="chipsrow"><span class="chip">Tricks: your team <b>${us}</b> · them <b>${them}</b></span><span class="chip">Dealer: ${g.dealer>=0?esc(g.players[g.dealer].name):"not yet"}</span></div>
+  <div class="banner ${(myTurn||chooseMe||canDeal)?"me":""}">${banner}</div>
+  <div class="ttable" role="group" aria-label="Table">${slots}<div class="tcenter">Trump${trumpTxt}</div></div>
+  <details class="log" id="logbox" ${S.logOpen?"open":""}><summary>Game log · Room ${esc(V.code)}</summary><div class="logl">${g.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div></details>
+  <div class="dock">
+    ${pick}
+    ${hand.length ? `<div class="hand" style="--cw:${cw}px">${handCards}</div>` : ""}
+  </div>`;
+}
+function renderOverlay(V){
+  if (S.settingsOpen) return settingsHTML();
+  if (!V || !V.g) return "";
+  const g = V.g;
+  if (GAMES[V.kind]){
+    const o = GAMES[V.kind].overlay(V); if (o) return o;
+    if (S.scoresOpen) return `<div class="veil"><div class="sheet" role="dialog" aria-label="Scores"><h2>Scoreboard</h2>${GAMES[V.kind].scores(V)}<button class="btn" id="closescores">Close</button></div></div>`;
+    return "";
+  }
+  if (V.kind === "court"){
+    if (g.phase==="matchEnd"){
+      const wt = g.score[0] >= g.target ? 0 : 1;
+      return `<div class="veil"><div class="sheet" role="dialog" aria-label="Final result">
+        <div class="champ"><div class="note">Match over</div><h2>${teamNames(g,wt)} win${""}</h2><div>Team ${wt===0?"A":"B"} · ${g.score[wt]} points</div></div>
+        ${courtScoresHTML(V)}
+        <button class="btn" id="cnewmatch">Play a new match</button>
+        <button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+    }
+    const canDeal = g.phase==="handEnd" && g.dealTeam === V.me % 2;
+    if (g.phase==="handEnd" && S.dismissed!==g.hand){
+      const h = g.hlog[g.hlog.length-1];
+      return `<div class="veil"><div class="sheet" role="dialog" aria-label="Hand result">
+        <h2>${teamNames(g,h.team)} won hand ${g.hand}${h.court?" with a Court":""}</h2>
+        <div class="note">Tricks: Team A ${h.tricks[0]}, Team B ${h.tricks[1]}. Trump was ${SUITS[h.trump]}. +${h.pts} point${h.pts===1?"":"s"}.</div>
+        ${courtScoresHTML(V)}
+        ${canDeal ? `<div class="note">Your team lost this hand, so you shuffle and deal.</div><button class="btn gold" id="cdeal">Shuffle &amp; deal hand ${g.hand+1}</button>`
+                  : `<div class="note">Team ${g.dealTeam?"B":"A"} lost this hand, so they shuffle and deal hand ${g.hand+1}.</div>`}
+        <button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+    }
+    if (g.phase==="handEnd") return canDeal ? `<div style="position:fixed;top:10px;left:0;right:0;display:flex;justify-content:center;z-index:5"><button class="btn gold" id="cdeal">Shuffle &amp; deal hand ${g.hand+1}</button></div>` : "";
+    if (S.scoresOpen) return `<div class="veil"><div class="sheet" role="dialog" aria-label="Scores"><h2>Scoreboard</h2>${courtScoresHTML(V)}<button class="btn" id="closescores">Close</button></div></div>`;
+    return "";
+  }
+  if (g.phase==="matchEnd"){
+    const ord = standings(g), t = totals(g), w = wins(g);
+    const top = ord.filter(i=>t[i]===t[ord[0]] && w[i]===w[ord[0]]);
+    const title = top.length>1 ? `Shared win: ${top.map(i=>esc(g.players[i].name)).join(" & ")}` : `${esc(g.players[ord[0]].name)} wins the match`;
+    return `<div class="veil"><div class="sheet" role="dialog" aria-label="Final result">
+      <div class="champ"><div class="note">After ${g.total} games</div><h2>${title}</h2><div>${t[ord[0]]} points · ${w[ord[0]]} game win${w[ord[0]]===1?"":"s"}</div></div>
+      ${scoresHTML(V)}
+      <button class="btn" id="newmatch">Play a new match</button>
+      <button class="btn ghost" id="leave2">Leave room</button></div></div>`;
+  }
+  if (g.phase==="roundEnd" && S.dismissed!==g.round){
+    const r = g.rounds[g.rounds.length-1];
+    return `<div class="veil"><div class="sheet" role="dialog" aria-label="Game result">
+      <h2>${esc(g.players[r.winner].name)} won game ${g.round}</h2>${scoresHTML(V)}
+      <button class="btn" id="nextgame">Deal game ${g.round+1}</button>
+      <button class="btn ghost" id="hide">Look at the table</button></div></div>`;
+  }
+  if (g.phase==="roundEnd") return `<div style="position:fixed;top:10px;left:0;right:0;display:flex;justify-content:center;z-index:5"><button class="btn" id="nextgame">Deal game ${g.round+1}</button></div>`;
+  if (S.scoresOpen) return `<div class="veil"><div class="sheet" role="dialog" aria-label="Scores"><h2>Scoreboard</h2>${scoresHTML(V)}<button class="btn" id="closescores">Close</button></div></div>`;
+  return "";
+}
+let lastG = 0;
+function render(){
+  const app = $("#app"), ov = $("#overlay"), V = S.V;
+  const stage = stageOf(V);
+  if (stage !== lastG){ S.dismissed = 0; lastG = stage; }
+  const typing = S.settingsOpen && ov.contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+  app.className = V && V.g ? "ingame" : "";
+  if (!S.role){
+    app.innerHTML = S.setup ? renderSetup() : renderHome();
+    if (!typing) ov.innerHTML = S.settingsOpen ? settingsHTML() : "";
+    return;
+  }
+  const status = S.status ? `<div class="status">${esc(S.status)}</div>` : "";
+  if (!V){
+    app.innerHTML = (status || `<div class="panel"><div class="note">Opening room…</div></div>`) + `<button class="btn ghost" id="leave">Back</button>`;
+    if (!typing) ov.innerHTML = S.settingsOpen ? settingsHTML() : "";
+    return;
+  }
+  const g = V.g, court = V.kind === "court";
+  const mine = !!(g && myTurnNow(V));
+  if (mine && !S.wasMyTurn) notifyTurn();
+  if (!mine && S.wasMyTurn) document.title = baseTitle;
+  S.wasMyTurn = mine;
+  app.innerHTML = status + (g ? (court ? renderCourt(V) : GAMES[V.kind] ? GAMES[V.kind].render(V) : renderGame(V)) : renderLobby(V));
+  updateNet(); updatePred();
+  if (g && g.notice && S.lastNotice !== g.notice.id){ if (S.lastNotice !== undefined) fakeNotice(g.notice); S.lastNotice = g.notice.id; } else if (g && S.lastNotice === undefined) S.lastNotice = 0;
+  if (!typing) ov.innerHTML = renderOverlay(V);
+  { const fin = !!(g && (g.phase==="matchEnd" || (V.kind==="bluff" && g.phase==="gameEnd")));
+    if (fin && !S.celeb){ const h = document.querySelector("#overlay .champ h2"); celebrate(h ? h.textContent : "Match over"); }
+    S.celeb = fin; }
+}
+
+/* ================= events ================= */
+let resizeT = null, lastFit = 0;
+window.addEventListener("resize", ()=>{
+  clearTimeout(resizeT);
+  resizeT = setTimeout(()=>{ if (S.role && S.V && S.V.g){ const f = fitCW(13); if (f !== lastFit){ lastFit = f; render(); } } }, 200);
+});
+document.addEventListener("click", e=>{
+  const el = e.target.closest("button"); if (!el) return;
+  const id = el.id;
+  if (el.dataset.card != null){
+    const n = Number(el.dataset.card), V = S.V, g = V && V.g;
+    if (!g) return;
+    const court = V.kind === "court";
+    if (court){
+      if (g.phase==="play" && !g.resolving && g.turn===V.me){
+        if (!CFG.hints || legalCourt(g.myHand, g.trick, n)){ S.selected = S.selected===n ? null : n; render(); }
+        else toast("Follow the suit that was led.");
+      }
+    } else if (g.phase==="playing" && g.turn===V.me){
+      if (!CFG.hints || legal(g.table,n)){ S.selected = S.selected===n ? null : n; render(); }
+      else toast("That card cannot be played now.");
+    }
+    return;
+  }
+  if (el.dataset.gi != null && S.V && S.V.g && S.V.kind==="bluff"){ const k = Number(el.dataset.gi), p = S.picks||[]; S.picks = p.includes(k) ? p.filter(x=>x!==k) : (p.length<4 ? p.concat(k) : p); render(); return; }
+  if (el.dataset.gi != null){ const k = Number(el.dataset.gi); S.selected = S.selected===k ? null : k; render(); return; }
+  if (el.dataset.ga){
+    const m = {t:"ga", a:el.dataset.ga};
+    if (el.dataset.suit != null) m.suit = Number(el.dataset.suit);
+    if (el.dataset.col != null) m.col = Number(el.dataset.col);
+    if (el.dataset.src) m.src = el.dataset.src;
+    if (el.dataset.sel != null && S.selected != null){ m.k = S.selected; const gg = S.V && S.V.g; if (gg && gg.myHand) m.card = gg.myHand[S.selected]; }
+    if (el.dataset.picks != null){ m.ks = (S.picks||[]).slice(); S.picks = []; }
+    S.selected = null; act(m); render(); return;
+  }
+  if (el.dataset.emo){ act({t:"emo", e:el.dataset.emo}); return; }
+  if (el.dataset.gt){ S.gameType = el.dataset.gt; lsSet("bs_gt", S.gameType); render(); return; }
+  if (el.dataset.team != null){ act({t:"team", team:Number(el.dataset.team)}); return; }
+  if (el.dataset.target){ S.targetN = Number(el.dataset.target); render(); return; }
+  if (el.dataset.trump != null){ act({t:"trump", suit:Number(el.dataset.trump)}); return; }
+  if (el.dataset.count){ S.setupN = Number(el.dataset.count); render(); return; }
+  if (el.dataset.size){ CFG.size = el.dataset.size; saveCfg(); render(); return; }
+  if (id==="create" || id==="join"){
+    const name = $("#name").value.trim().slice(0,14);
+    if (!name){ toast("Enter your name first."); $("#name").focus(); return; }
+    S.name = name; lsSet("bs_name", name);
+    if (typeof mqtt === "undefined"){ toast("Still loading the connection library. Try again in a moment."); return; }
+    if (id==="create"){ S.setup = true; render(); }
+    else {
+      const code = $("#joincode").value.trim().toUpperCase();
+      if (code.length !== 5){ toast("Room codes have 5 characters."); return; }
+      S.pw = $("#joinpw").value;
+      startGuest(name, code, false);
+    }
+  }
+  else if (id==="createroom"){
+    S.setup = false; S.pw = ($("#pw") ? $("#pw").value : S.pw) || "";
+    startHost(S.name, {kind:S.gameType, target:(S.gameType==="bluff" ? ([1,2,3].includes(S.targetN)?S.targetN:2) : S.gameType==="badam" ? ([1,2,3].includes(S.targetN)?S.targetN:1) : S.targetN), max:S.setupN});
+  }
+  else if (id==="setupback"){ S.setup = false; render(); }
+  else if (id==="install"){ if (installPrompt){ installPrompt.prompt(); installPrompt = null; } }
+  else if (id==="settings"){ closeEmo(); S.settingsOpen = true; render(); }
+  else if (id==="closesettings"){ S.settingsOpen = false; render(); }
+  else if (id==="start" || id==="startnow") act({t:"start"});
+  else if (id==="leave"){ if (S.V) confirmLeave(); else leave(); }
+  else if (id==="leave2") confirmLeave();
+  else if (id==="play"){
+    const n = S.selected; S.selected = null;
+    if (n!=null) act({t: S.V && S.V.kind==="court" ? "cplay" : "play", card:n});
+    render();
+  }
+  else if (id==="pass") act({t:"pass"});
+  else if (id==="scores"){ closeEmo(); S.scoresOpen = true; render(); }
+  else if (id==="closescores"){ S.scoresOpen = false; render(); }
+  else if (id==="hide"){ S.dismissed = stageOf(S.V); render(); }
+  else if (id==="emobtn"){ const b = $("#emobar"); b.hidden = !b.hidden; }
+  else if (id==="emoclose") closeEmo();
+  else if (id==="predbtn"){ const b = $("#predbar"); closeEmo(); b.hidden = !b.hidden; updatePred(); }
+  else if (id==="hidebtn"){ document.body.classList.toggle("hidecards"); render(); }
+  else if (id==="cfg-pred"){ CFG.predict = e.target.checked; saveCfg(); if (!CFG.predict){ const b = $("#predbar"); if (b) b.hidden = true; } render(); }
+  else if (id==="nextgame") act({t:"next"});
+  else if (id==="cdeal") act({t:"cdeal"});
+  else if (id==="newmatch"){ S.scoresOpen = false; act({t:"newmatch"}); }
+  else if (id==="cnewmatch"){ S.scoresOpen = false; act({t:"cnewmatch"}); }
+  else if (id==="chatbtn"){ closeEmo(); openChat(true); }
+  else if (id==="chatclose") openChat(false);
+  else if (id==="send") sendText();
+});
+document.addEventListener("change", e=>{
+  const id = e.target.id;
+  if (id==="cfg-relay"){ lsSet("bs_relay", e.target.value.trim()); toast("Saved. It applies to rooms you create or join next."); return; }
+  if (id==="pen") act({t:"penalty", v:Number(e.target.value)});
+  else if (id==="cfg-hints"){ CFG.hints = e.target.checked; saveCfg(); render(); }
+  else if (id==="cfg-vib"){ CFG.vibrate = e.target.checked; saveCfg(); if (CFG.vibrate && navigator.vibrate) navigator.vibrate(120); }
+  else if (id==="cfg-snd"){ CFG.sound = e.target.checked; saveCfg(); if (CFG.sound) beep(); }
+});
+document.addEventListener("toggle", e=>{ if (e.target.id==="logbox") S.logOpen = e.target.open; }, true);
+document.addEventListener("input", e=>{ if (e.target.id==="joincode") e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""); });
+document.addEventListener("keydown", e=>{ if (e.key==="Enter" && e.target.id==="chatinput") sendText(); });
+
+/* ================= start ================= */
+S.token = lsGet("bs_token") || newToken(); lsSet("bs_token", S.token);
+S.name = lsGet("bs_name") || "";
+S.gameType = GAME_INFO[lsGet("bs_gt")] ? lsGet("bs_gt") : "badam";
+render(); drawChat();
+window.mqttReady.then(ok=>{
+  let framed = false; try{ framed = window.self !== window.top; }catch(e){ framed = true; }
+  if (!ok){ toast("Could not load the connection library. Check your internet and reload."); return; }
+  if (framed || !/^(https?:|file:)/.test(location.protocol)) toast("Open this page directly in Chrome or Safari. Previews inside other apps block connections.");
+  // pick up where we left off after a reload, a Back press or a closed tab
+  let sess = null; try{ sess = JSON.parse(lsGet("bs_sess")||"null"); }catch(e){}
+  if (!sess || !sess.code || !sess.name) return;
+  S.pw = sess.pw || "";
+  if (sess.role === "host"){
+    let saved = null; try{ saved = JSON.parse(lsGet("bs_host")||"null"); }catch(e){}
+    if (saved && saved.code === sess.code && Date.now() - saved.t < 6*3600*1000) startHost(sess.name, {resume:saved});
+    else lsSet("bs_sess", null);
+  } else startGuest(sess.name, sess.code, true);
+});
+</script>
+</body>
+</html>
